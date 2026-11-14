@@ -1,0 +1,14 @@
+# Planejado para ADOTAR o serviço existente no Render, sem criar outro.
+# Aplicar somente após revisar plano sem cobrança nem criação adicional.
+services:
+  - type: web
+    runtime: static
+    name: sistemas-forte-tech
+    repo: https://github.com/FORTEATACAREJO/SISTEMAS-FORTE-TECH
+    branch: main
+    buildCommand: "echo 'Sistemas Forte Tech: arquivos estaticos preparados'"
+    staticPublishPath: sft-preview
+    autoDeployTrigger: commit
+    renderSubdomainPolicy: enabled
+    domains:
+      - sistemasfortetech.com.br
