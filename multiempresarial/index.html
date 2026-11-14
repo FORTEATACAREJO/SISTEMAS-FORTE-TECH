@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10283b">
+<meta name="description" content="Multiempresarial, sistema de gestão fiscal por empresa e CNPJ da Sistemas Forte Tech. Conheça os recursos e experimente a demonstração.">
+<title>Multiempresarial | Sistemas Forte Tech</title>
+<link rel="icon" href="/sft-icon.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<style>
+:root{--dark:#10283b;--aqua:#187c84;--ink:#173348;--muted:#526b7e;--light:#f2f7f9;--line:#dce6ec;--gold:#e5c575}
+*{box-sizing:border-box}body{margin:0;font:16px/1.55 system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:var(--light);color:var(--ink)}
+a{text-decoration:none}header{background:var(--dark);color:white;padding:18px max(20px,calc((100% - 1100px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}.brand img{width:40px;height:40px}.brand b{display:block;font-size:20px}.brand small{font-size:12px;color:#bfd1d9}.nav a{color:#e7f7fa;font-size:13px;margin-left:18px}
+main{max-width:1100px;margin:auto;padding:30px 20px 60px}.hero{background:#fff;border:1px solid var(--line);border-radius:20px;padding:clamp(25px,5vw,60px);box-shadow:0 16px 50px rgba(9,38,55,.04)}.eyebrow{color:#0d747b;text-transform:uppercase;font-size:13px;font-weight:850;letter-spacing:1.2px}.hero h1{font-size:clamp(30px,4.7vw,55px);line-height:1.12;max-width:800px;margin:12px 0 18px}.hero p{max-width:770px;color:var(--muted);font-size:18px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0 0}
+.btn{border-radius:11px;display:inline-block;font-weight:750;padding:13px 19px;background:var(--dark);color:#fff}.btn.alt{border:1px solid var(--line);background:#fff;color:var(--dark)}
+.status{display:inline-block;background:#fff8df;border:1px solid #e5d39c;color:#6c551f;border-radius:30px;padding:6px 12px;font-size:12px;font-weight:700}
+section h2{margin:40px 0 18px;font-size:26px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{background:#fff;padding:23px;border-radius:14px;border:1px solid var(--line);min-height:150px}.card h3{margin:0 0 8px}.card p{color:var(--muted);margin:0;font-size:14px}
+.notice{margin-top:24px;padding:18px 22px;background:#eaf5f6;border:1px solid #b8dfe0;border-radius:14px;color:#214c52}
+footer{margin-top:42px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.nav a{margin:0 10px 0 0}.hero p{font-size:16px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><img src="/sft-icon.svg" alt=""><div><b>Multiempresarial</b><small>Um sistema da Sistemas Forte Tech</small></div></div><nav class="nav" aria-label="Navegação"><a href="/demo.html">Demonstração</a><a href="/contador.html">Contadores</a><a href="/admin.html">Acesso empresarial</a></nav></header>
+<main>
+<section class="hero">
+<span class="status">Prévia pública · Em homologação</span>
+<div class="eyebrow">Sistemas Forte Tech · Multiempresarial</div>
+<h1>Uma plataforma para administrar várias empresas com dados separados.</h1>
+<p>Organize CNPJ, estabelecimentos, usuários, contadores, produtos e preparação fiscal. Cada empresa possui seus vínculos e permissões. O sistema está disponível para avaliação, sem emissão de documentos fiscais reais.</p>
+<div class="actions"><a class="btn" href="/demo.html">Conhecer o sistema</a><a class="btn alt" href="/admin.html">Solicitar acesso empresarial</a><a class="btn alt" href="/contador.html">Portal do Contador</a></div>
+</section>
+<section aria-labelledby="recursos"><h2 id="recursos">Recursos em estruturação</h2><div class="grid">
+<article class="card"><h3>Empresas e filiais</h3><p>Organização por CNPJ, matriz, estabelecimentos, regime tributário informado e atividades.</p></article>
+<article class="card"><h3>Usuários e contadores</h3><p>Convites e permissões específicos por empresa; acesso interno sujeito a autenticação e vínculo autorizado.</p></article>
+<article class="card"><h3>Fiscal e estoque</h3><p>Cadastros, simulações e controles planejados. NF-e e NFC-e indisponíveis até homologação.</p></article>
+<article class="card"><h3>Financeiro e cartões</h3><p>Estruturas de conciliação e integrações em preparação, ainda sem operações bancárias reais.</p></article>
+<article class="card"><h3>Inteligência artificial</h3><p>Agentes por empresa previstos na arquitetura, sem geração automática de decisões fiscais nesta etapa.</p></article>
+<article class="card"><h3>Mensalidade por empresa</h3><p>Assinatura mensal planejada. Valor a definir; sem cobrança ou contratação online neste momento.</p></article>
+</div></section>
+<div class="notice"><strong>Publicação de demonstração, sem dados de clientes.</strong> A navegação pública não exige login. Para acesso ao ambiente administrativo é necessário e-mail autenticado e vínculo autorizado no Supabase. O cadastro de clientes e a operação fiscal de produção ainda dependem de homologação. Nenhum valor será cobrado agora.</div>
+<footer>© Sistemas Forte Tech — Multiempresarial · Um produto de Forte Atacarejo Ltda. · <a href="/demo.html">Demonstração</a> · <a href="/admin.html">Acesso protegido</a></footer>
+</main>
+<script>if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));</script>
+</body></html>

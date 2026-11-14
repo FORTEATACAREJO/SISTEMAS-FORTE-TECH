@@ -1,0 +1,37 @@
+{
+  "productName": "Multiempresarial",
+  "portfolioBrand": "Sistemas Forte Tech",
+  "productCode": "SFT_SETOR_FISCAL",
+  "technicalStatus": "public_preview_not_tax_homologated",
+  "pricing": {
+    "status": "a_definir",
+    "billingInterval": "MONTHLY",
+    "currency": "BRL",
+    "amountCents": null,
+    "collectionEnabled": false,
+    "checkoutEnabled": false,
+    "licenseActivationOnPaymentEnabled": false
+  },
+  "hosting": {
+    "model": "SHARED_CLOUD",
+    "currentPublicUrl": "https://multiempresarial-forte-tech.onrender.com",
+    "customDomain": null,
+    "dedicatedDeployment": true,
+    "backendSupabaseProject": "tusmlfhzwlzwnoxfhomt",
+    "billingProvider": "ASAAS_SANDBOX",
+    "billingConfiguredForThisOrigin": false
+  },
+  "identity": {
+    "publicDemonstration": true,
+    "companyOnboardingRequiresEmailAuth": true,
+    "fiscalEmission": false,
+    "aiOperationsEnabled": false
+  },
+  "companyLicense": {
+    "existingCode": "SFT_SETOR_FISCAL",
+    "companyScoped": true,
+    "enforcement": "RESTRICTIVE_RLS",
+    "productionCustomerEnabled": false
+  },
+  "notes": "Preço e acesso comercial devem ser aprovados e homologados antes de cobrança e ativação."
+}

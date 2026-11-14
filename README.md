@@ -20,3 +20,12 @@ Aplicação independente de Setor Fiscal Multiempresa, Portal do Contador, licen
 **Atenção:** o Render ainda usa o repositório legado até a conexão ser alterada pelo painel. O backend fiscal não está homologado para produção e o checkout de cartões permanece em Sandbox.
 
 Não armazenar senhas, credenciais bancárias, certificados ou tokens de produção neste repositório.
+
+## Produto Multiempresarial — serviço público independente (14/11/2026)
+
+- Produto: **Multiempresarial**, um dos sistemas da Sistemas Forte Tech.
+- Código para publicação separado em `multiempresarial/`.
+- Endereço provisório: https://multiempresarial-forte-tech.onrender.com
+- O banco permanece `tusmlfhzwlzwnoxfhomt`. Não transferir FORTECOMPANNY, FORTE FISCAL ou FORTE OPERACIONAL.
+- Mensalidade planejada por CNPJ; preço a definir, sem contratos ou pagamentos ativos.
+- [Plano de publicação e migração futura](multiempresarial/README.md).
