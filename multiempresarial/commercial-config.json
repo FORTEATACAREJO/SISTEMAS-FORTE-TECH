@@ -10,7 +10,9 @@
     "amountCents": null,
     "collectionEnabled": false,
     "checkoutEnabled": false,
-    "licenseActivationOnPaymentEnabled": false
+    "licenseActivationOnPaymentEnabled": false,
+    "aiIncludedInOffer": true,
+    "aiAvailability": "PENDENTE_HOMOLOGACAO"
   },
   "hosting": {
     "model": "SHARED_CLOUD",
@@ -33,5 +35,29 @@
     "enforcement": "RESTRICTIVE_RLS",
     "productionCustomerEnabled": false
   },
-  "notes": "Preço e acesso comercial devem ser aprovados e homologados antes de cobrança e ativação."
+  "notes": "Preço e acesso comercial devem ser aprovados e homologados antes de cobrança e ativação.",
+  "ai": {
+    "includedInSubscriptionOffer": true,
+    "approvalStatus": "PENDENTE_HOMOLOGACAO",
+    "operational": false,
+    "inferenceEnabled": false,
+    "providerConnected": false,
+    "humanReviewRequiredForFiscalSuggestions": true
+  },
+  "signInWithChatGPT": {
+    "provider": "OpenAI",
+    "type": "COMMERCIAL_WEBSITE",
+    "status": "AGUARDANDO_APROVACAO",
+    "partnerApproved": false,
+    "identityLoginEnabled": false,
+    "chatgptPlanUsageEnabled": false,
+    "authorizationCodeFlowEnabled": false,
+    "oauthClientId": null,
+    "registeredCallbackUrl": null,
+    "requiresIndividualConsent": true,
+    "requiresSeparatePlanUseConsent": true,
+    "chatgptPlanSeparateFromAppSubscription": true,
+    "accessToConversations": false,
+    "interestForm": "https://openai.com/form/sign-in-with-chatgpt-interest/"
+  }
 }

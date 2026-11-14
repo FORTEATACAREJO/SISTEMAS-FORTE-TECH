@@ -28,3 +28,5 @@ test('Frontend usa apenas a chave publicável do Supabase e rota do novo host',(
  assert.match(read('admin.html'),/multiempresarial-forte-tech.onrender.com/);
  assert.match(read('demo.html'),/Cadastros fictícios feitos aqui/);
 });
+
+test('SIWC integra plano sem simular parceria nem liberar login',()=>{const product=JSON.parse(read('config/product.json'));assert.equal(cfg.pricing.aiIncludedInOffer,true);assert.equal(product.ai.inferenceEnabled,false);assert.equal(cfg.signInWithChatGPT.status,'AGUARDANDO_APROVACAO');assert.equal(cfg.signInWithChatGPT.chatgptPlanUsageEnabled,false);assert.equal(cfg.signInWithChatGPT.identityLoginEnabled,false);assert.match(read('index.html'),/Sign in with ChatGPT/);});

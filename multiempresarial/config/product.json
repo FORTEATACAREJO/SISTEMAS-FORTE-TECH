@@ -19,7 +19,10 @@
     "currency": "BRL",
     "method": "CREDIT_CARD",
     "checkoutEnabled": false,
-    "recurringChargeEnabled": false
+    "recurringChargeEnabled": false,
+    "aiIncludedInOffer": true,
+    "aiIncludedStatus": "PENDENTE_HOMOLOGACAO",
+    "terms": "A oferta de IA será ativada apenas depois de homologação, consentimento aplicável e definição comercial."
   },
   "fiscal": {
     "issuanceEnabled": false,
@@ -27,7 +30,22 @@
   },
   "ai": {
     "providerConnected": false,
-    "inferenceEnabled": false
+    "inferenceEnabled": false,
+    "includedInSubscriptionOffer": true,
+    "aiActivationStatus": "PENDENTE_HOMOLOGACAO",
+    "signInWithChatGPT": {
+      "integrationType": "COMMERCIAL_WEBSITE",
+      "status": "AGUARDANDO_APROVACAO",
+      "partnerApproved": false,
+      "identityLoginEnabled": false,
+      "chatgptPlanUsageEnabled": false,
+      "openAIClientId": null,
+      "registeredCallbackUrl": null,
+      "requiresIndividualConsent": true,
+      "requiresSeparatePlanUseConsent": true,
+      "chatgptAccountIsSeparateFromMultiempresarialSubscription": true,
+      "canReadChatGPTConversations": false
+    }
   },
   "publicAccess": {
     "landingPage": true,

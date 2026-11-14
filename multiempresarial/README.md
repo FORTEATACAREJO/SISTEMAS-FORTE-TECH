@@ -29,3 +29,13 @@ O plano `SFT_FISCAL_MENSAL_NUVEM` já prevê mensalidade por cartão na nuvem co
 5. Após aprovação de preço, migrar a publicação para repositório `MULTIEMPRESARIAL` dedicado, se desejado, preservando o banco Supabase e os dados por CNPJ.
 
 **O site público representa homologação; não é liberação para produção fiscal.**
+
+## IA prevista na assinatura e Sign in with ChatGPT (14/11/2026)
+
+O plano único `SFT_FISCAL_MENSAL_NUVEM` já registra **IA prevista na oferta**, sem preço nem ativação. O Supabase possui as colunas `ai_included_in_offer`, `ai_activation_status`, `chatgpt_signin_status`, `chatgpt_plan_usage_enabled`, `ai_execution_enabled` e `chatgpt_user_consent_required`. A migração foi aplicada e não alterou licenças, clientes, chaves, métodos de pagamento nem as tabelas fiscais.
+
+`commercial-config.json` e `config/product.json` refletem o estado comercial. O site apresenta a integração como **pendente de aprovação**, sem oferecer botão OAuth falso.
+
+A mensalidade do Multiempresarial é uma cobrança própria da FORTE, separada da assinatura ChatGPT individual. Sign in with ChatGPT para SaaS comercial depende de participação aprovada pela OpenAI e client ID próprio. O consentimento para entrar com ChatGPT e o consentimento para usar o plano ChatGPT para IA são distintos. **Não** utilizar o fluxo de registro destinado a ferramentas open-source locais para contornar a aprovação comercial.
+
+Etapas e documentação: [INTEGRACAO_CHATGPT_IA.md](INTEGRACAO_CHATGPT_IA.md).
