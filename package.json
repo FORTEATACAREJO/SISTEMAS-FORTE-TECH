@@ -1,0 +1,13 @@
+{
+  "name": "sistemas-forte-tech",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test sft-integrations/tests/*.test.mjs",
+    "check": "node --check sft-preview/admin.js && node --check sft-preview/integration-adapters.mjs && node --check sft-preview/card-reconciliation-adapter.mjs && node --check sft-preview/sw.js"
+  }
+}
