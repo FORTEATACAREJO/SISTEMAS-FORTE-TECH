@@ -3,7 +3,7 @@
 const ORIGIN="https://tusmlfhzwlzwnoxfhomt.supabase.co";
 const PUBLISHABLE_KEY="sb_publishable_O99oIf3bXMIOkeh_XCpY6w_7OxD3FPI";
 const MASTER="sistemasfortetech@gmail.com";
-const STORAGE_KEY="multiempresarial-secure-admin-session";
+const STORAGE_KEY="multiempresarial-protected-session";
 const $=id=>document.getElementById(id);
 const knownStates="AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
 let session=null, user=null, isMaster=false, selectedCompany=null, groups=[],licensedSystems=[];
@@ -595,7 +595,7 @@ async function load(){
  isMaster=await rpc("is_platform_master");
  $("login-area").hidden=true;$("dashboard").hidden=false;
  $("identity").textContent="Conta: "+(user.email||"E-mail não informado");
- $("role").textContent=isMaster?"Master Sistemas Forte Tech":"Usuário autenticado";
+ $("role").textContent=isMaster?"Master Multiempresarial":"Usuário autenticado";
  $("activate").hidden=isMaster||user.email?.toLowerCase()!==MASTER;
  $("create-card").hidden=!isMaster;
  licensedSystems=await table("sft_system_catalog?select=code,name,integration_state&order=name.asc");

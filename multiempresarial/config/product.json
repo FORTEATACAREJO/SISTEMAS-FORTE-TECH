@@ -1,0 +1,37 @@
+{
+  "productCode": "SFT_SETOR_FISCAL",
+  "publicName": "Multiempresarial",
+  "parentBrand": "Sistemas Forte Tech",
+  "owner": "Forte Atacarejo Ltda.",
+  "status": "PUBLIC_HOMOLOGATION",
+  "domain": null,
+  "renderServiceName": "multiempresarial-forte-tech",
+  "renderUrl": "https://multiempresarial-forte-tech.onrender.com",
+  "backend": {
+    "provider": "Supabase",
+    "projectId": "tusmlfhzwlzwnoxfhomt",
+    "separatedProductData": false,
+    "tenantIsolation": "company_id_and_RLS"
+  },
+  "subscription": {
+    "period": "MONTHLY",
+    "priceBRL": null,
+    "currency": "BRL",
+    "method": "CREDIT_CARD",
+    "checkoutEnabled": false,
+    "recurringChargeEnabled": false
+  },
+  "fiscal": {
+    "issuanceEnabled": false,
+    "taxRulesFullyApproved": false
+  },
+  "ai": {
+    "providerConnected": false,
+    "inferenceEnabled": false
+  },
+  "publicAccess": {
+    "landingPage": true,
+    "internalOperationsRequireAuth": true,
+    "redirectURLApprovalPending": true
+  }
+}

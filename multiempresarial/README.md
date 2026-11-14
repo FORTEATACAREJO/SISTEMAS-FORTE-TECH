@@ -1,36 +1,31 @@
-# Multiempresarial — Sistema independente da Sistemas Forte Tech
+# Multiempresarial — Sistemas Forte Tech
 
-**Produto:** Multiempresarial, parte do catálogo Sistemas Forte Tech.  
-**Serviço público provisório:** https://multiempresarial-forte-tech.onrender.com  
-**Caminho de publicação atual:** `multiempresarial/` no repositório `FORTEATACAREJO/SISTEMAS-FORTE-TECH`.  
-**Domínio próprio:** ainda não contratado; definir mais tarde sem alterar o domínio institucional `sistemasfortetech.com.br`.
+**Produto:** Multiempresarial, integrante do portfólio da Sistemas Forte Tech. **Titular:** Forte Atacarejo Ltda.
 
-## Situação comercial
-- Licença individual por empresa; compartilhar o mesmo Supabase com RLS por CNPJ e papéis.
-- Código de licença estável: `SFT_SETOR_FISCAL`.
-- Plano já provisionado no Supabase: `SFT_FISCAL_MENSAL_NUVEM`, mensal, cartão, nuvem compartilhada.
-- **Preço a definir, sem assinatura ativa nem cobrança**. `commercial-config.json` é uma declaração de estado, não inicia checkout nem emissão fiscal.
-- Asaas no modo Sandbox atual. Antes de testes de checkout no novo host, autorizar a origem https://multiempresarial-forte-tech.onrender.com na Edge Function de faturamento; validar CORS, callback e o ciclo completo de pagamento. Não ativar cobrança enquanto isso não for testado.
-- As regras tributárias ainda estão pendentes de homologação, NF-e/NFC-e indisponíveis.
+## Site público independente
 
-## Acesso seguro e onboarding
-- `index.html`: vitrine pública e ações.
-- `demo.html`: demonstração local sem salvar informações reais.
-- `admin.html` / `admin.js`: acesso com link por e-mail via Supabase. Requer configuração do Redirect URL `https://multiempresarial-forte-tech.onrender.com/admin.html` em Supabase → Authentication → URL Configuration. Sem allowlist, o login não está homologado neste host.
-- `contador.html`: encaminha ao acesso autorizado.
-- Para contas reais, é necessário usuário autenticado, vínculo/licença e revisão de segurança. O projeto Supabase atual está com zero usuários e zero empresas.
+Render: `multiempresarial-forte-tech` → https://multiempresarial-forte-tech.onrender.com/.
+Build estático, publishPath: `multiempresarial`, branch `main` do repositório `FORTEATACAREJO/SISTEMAS-FORTE-TECH`.
 
-## Separação futura em repositório próprio
-A pasta `multiempresarial/` é independente em termos de assets e de publicação. Para transferir:
-1. Criar novo repositório exclusivo do produto e transferir os arquivos de `multiempresarial/` sem alterar caminhos absolutos `/...`.
-2. Ajustar o Render deste serviço para apontar ao repositório novo e seu diretório de publicação.
-3. Preservar o mesmo projeto Supabase `tusmlfhzwlzwnoxfhomt` inicialmente para não perder cadastros ou licenças; se houver migração de banco, executar por procedimento separado e auditado.
-4. Adicionar o domínio novo ao **mesmo** serviço Render, verificar DNS/TLS e incluir URL de callback no Supabase Auth.
-5. Revisar origens permitidas no faturamento Sandbox, e só então habilitar venda mensal após preço aprovado e testes.
-6. Manter o endereço `onrender.com` até homologação do domínio próprio.
+- `index.html`: vitrine pública sem autenticação e sem dados empresariais reais
+- `admin.html`, `admin.js`: painel de empresas com autenticação Supabase e controle de licenças por empresa
+- `contador.html`: redirecionamento para login autorizado do contador
+- `manifest.webmanifest`, `sw.js`, `icon.svg`: PWA, instalador e compartilhamento; cache **apenas de recursos públicos**
+- `config/product.json`: identidade comercial e preços ainda a definir, sem cobrança
+- `tests/public.test.mjs`: invariantes de segurança e produto
 
-Este serviço **não deve modificar** FORTE FISCAL, FORTE OPERACIONAL, FORTECOMPANNY ou MC-6.
+## Banco e licenças
 
-## Verificação
-- `node --test multiempresarial/tests/publicacao.test.mjs`
-- Verificar `/`, `/demo.html`, `/admin.html`, `/contador.html`, `/manifest.webmanifest` e `/commercial-config.json` pelo endereço Render.
+Preservamos o Supabase **existente** `tusmlfhzwlzwnoxfhomt` (50 tabelas com RLS), com o identificador técnico `SFT_SETOR_FISCAL`. Não foi criado outro banco e nenhuma empresa foi cadastrada automaticamente. O código legado da marca Sistemas Forte Tech continua disponível em `sft-preview/`.
+
+O plano `SFT_FISCAL_MENSAL_NUVEM` já prevê mensalidade por cartão na nuvem compartilhada, mas ainda tem `amount_cents=NULL` e `availability=PRECIFICACAO_PENDENTE`. Checkout real bloqueado.
+
+## Pendente antes do acesso empresarial completo
+
+1. No Supabase Auth, adicionar Redirect URL `https://multiempresarial-forte-tech.onrender.com/admin.html`. **Sem a URL permitida, o login por link de e-mail não está homologado no novo endereço.**
+2. Criar e verificar o primeiro usuário Master; homologar duas empresas fictícias com papéis distintos.
+3. Homologar fiscal (MG, GO, demais UFs), contadores e segregação real. Não emitir NF-e/NFC-e nem cobrar até testar.
+4. Após escolher o novo domínio, configurar DNS/HTTPS, adicionar URL de redirecionamento no Supabase e manter a URL Render como fallback.
+5. Após aprovação de preço, migrar a publicação para repositório `MULTIEMPRESARIAL` dedicado, se desejado, preservando o banco Supabase e os dados por CNPJ.
+
+**O site público representa homologação; não é liberação para produção fiscal.**

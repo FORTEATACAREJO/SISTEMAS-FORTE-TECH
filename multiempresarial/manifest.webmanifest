@@ -1,17 +1,17 @@
 {
   "id": "/",
-  "name": "Multiempresarial | Sistemas Forte Tech",
+  "name": "Multiempresarial — Sistemas Forte Tech",
   "short_name": "Multiempresarial",
-  "description": "Gestão fiscal multiempresarial por CNPJ, com portal do contador e licenciamento próprio. Ambiente público de demonstração.",
+  "description": "Painel multiempresarial por CNPJ. Versão pública de homologação.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#f2f6f9",
+  "background_color": "#f6f8fa",
   "theme_color": "#10283b",
   "lang": "pt-BR",
   "icons": [
     {
-      "src": "/sft-icon.svg",
+      "src": "/icon.svg",
       "type": "image/svg+xml",
       "sizes": "any",
       "purpose": "any maskable"
