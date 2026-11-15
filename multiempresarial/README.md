@@ -65,3 +65,14 @@ Especificação completa: [PROPOSTA_CONSTRUTOR_SISTEMAS_MODULOS.md](PROPOSTA_CON
 ### Acesso pelo menu empresarial
 
 No painel autenticado, os **módulos publicados** da empresa selecionada aparecem em `Módulos publicados desta empresa`, com endereço `/construtor.html?empresa=<UUID>&modulo=<UUID>`. O construtor verifica a licença e o vínculo antes de consultar registros; parâmetros de URL não concedem permissão. Módulos rascunho permanecem no editor apenas para administradores.
+
+## Criador de projetos de sistemas completos — P2, homologação (15/11/2026)
+
+- Rota: `/criar-sistema.html`, projeto declarativo na interface, com prévia local sem login e gravação apenas para administradores vinculados a CNPJ com licença válida.
+- Modelos iniciais: assistência técnica, gestão de obras, gestão comercial e sistema personalizado.
+- Especificações: `multiempresarial/sistema-core.mjs` (no máximo 6 módulos, 12 campos por módulo, perfis, finalidade e infraestrutura planejada). Não aceita SQL/JS livre ou execução de código gerado.
+- Backend: `public.sft_system_blueprints` (RLS por CNPJ/licença), `private.sft_system_blueprint_audit` e RPCs de criação, alteração de rascunho e aprovação para homologação.
+- Infraestrutura própria (Render, GitHub, domínio ou banco) **não é provisionada** ao aprovar um projeto. Essa será uma fase posterior, após orçamento, revisão e autorização explícita.
+- Testes transacionais com três perfis e duas empresas fictícias, reversão por ROLLBACK, sem deixar registros de teste.
+- Gate: autenticação Master e usuários reais, comprovação de consentimento e homologação ponta a ponta ainda pendentes.
+

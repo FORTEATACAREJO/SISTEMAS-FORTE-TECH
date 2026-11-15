@@ -68,3 +68,7 @@ O sistema produz uma **especificação verificável**, não código irrestrito: 
 Repositório atual: `FORTEATACAREJO/SISTEMAS-FORTE-TECH`, pasta `multiempresarial/`. Supabase: `tusmlfhzwlzwnoxfhomt`. Render: `srv-dbser6gn74is739lrth0`.
 
 **Nenhuma nova contratação ou recurso pago automático.** Não modificar FORTE FISCAL, FORTE OPERACIONAL, FORTECOMPANNY, SUGIRE e MC-6. Sistemas independentes produzidos pelos clientes devem permanecer isolados e rastreáveis.
+
+## Entrega P2 — 15/11/2026
+
+Implementado **criador de especificações de sistemas independentes**, com modelos, componentes permitidos, prévia visual, salvamento por CNPJ, atualização de rascunho, aprovação para homologação e trilha de auditoria. **Não é gerador de aplicações executáveis nem deploy automático**; o próximo trabalho de P2 será o provisionador isolado, após garantia de segurança, orçamento e autorização. P3 (IA por linguagem natural) permanece pendente.

@@ -112,6 +112,20 @@
       "maxFieldsPerModule": 12,
       "maxModulesPerCompany": 30,
       "aiGeneratedCode": false
+    },
+    "guidedSystemProjects": {
+      "enabled": true,
+      "status": "HOMOLOGACAO",
+      "loginAndLicenseRequiredToPersist": true,
+      "allowsPublicLocalPreview": true,
+      "maxModules": 6,
+      "maxFieldsPerModule": 12,
+      "companyAdminApprovalForHomologation": true,
+      "actualAppGenerationEnabled": false,
+      "standaloneAppProvisioningEnabled": false,
+      "paidHostingEnabled": false,
+      "artificialIntelligenceExecutionEnabled": false,
+      "notes": "Modelos e prévias são projetos declarativos. A aprovação não publica sistemas completos."
     }
   }
 }
