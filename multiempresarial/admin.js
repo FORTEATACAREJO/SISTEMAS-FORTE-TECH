@@ -278,6 +278,27 @@ async function details(company){
  }
  await loadIntegrationSettings(company,role);
  await loadAccountingSettings(company,role);
+ await loadBuilderMenu(company);
+}
+async function loadBuilderMenu(company){
+ const target=$("builder-menu-list");target.replaceChildren();
+ const moduleLink=document.querySelector("#builder-launch > a");
+ moduleLink.href="/construtor.html?empresa="+encodeURIComponent(company.id);
+ try{
+  const items=await table("sft_builder_modules?select=id,title,version&company_id=eq."+
+   encodeURIComponent(company.id)+"&status=eq.PUBLICADO&order=published_at.desc&limit=30");
+  if(!items.length){const p=document.createElement("p");p.textContent="Nenhum módulo publicado para esta empresa.";target.append(p);return;}
+  const ul=document.createElement("ul");
+  for(const m of items){
+   const li=document.createElement("li"),a=document.createElement("a");
+   a.href="/construtor.html?empresa="+encodeURIComponent(company.id)+"&modulo="+encodeURIComponent(m.id);
+   a.textContent=m.title+" (versão "+m.version+")";
+   li.append(a);ul.append(li);
+  }
+  target.append(ul);
+ }catch(e){
+  const p=document.createElement("p");p.textContent="Não foi possível carregar os módulos: "+e.message;target.append(p);
+ }
 }
 const connectionKinds={
  BANK_API:"API bancária",OPEN_FINANCE:"Open Finance",BANK_FILE:"Arquivo bancário (OFX/CSV)",

@@ -61,3 +61,7 @@ Especificação completa: [PROPOSTA_CONSTRUTOR_SISTEMAS_MODULOS.md](PROPOSTA_CON
 - Testes transacionais: duas empresas fictícias + usuário consulta, tentativa de leitura cruzada, gravação indevida e alteração de publicado foram rejeitadas; testes revertidos.
 - Não existem usuários nem empresas clientes reais ativos neste banco. Login por e-mail no domínio Render depende de configurar Redirect URL e validar um usuário Master. Esta entrega é **homologação**, não liberação comercial.
 - Recursos pendentes: editor de sistemas independentes, dashboards, modelos com IA Forte, login ChatGPT e cobrança. Nenhuma contratação adicional.
+
+### Acesso pelo menu empresarial
+
+No painel autenticado, os **módulos publicados** da empresa selecionada aparecem em `Módulos publicados desta empresa`, com endereço `/construtor.html?empresa=<UUID>&modulo=<UUID>`. O construtor verifica a licença e o vínculo antes de consultar registros; parâmetros de URL não concedem permissão. Módulos rascunho permanecem no editor apenas para administradores.

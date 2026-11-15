@@ -31,3 +31,5 @@ test('página exige autenticação, menu empresa e não expõe service_role',()=
  assert.match(js,/sft_builder_add_record/);
  assert.doesNotMatch(js,/service_role|sb_secret_/);
 });
+
+test('menu da empresa aponta apenas para módulos publicados, dentro do CNPJ',()=>{const admin=read('admin.js');const page=read('admin.html');const builder=read('construtor.js');assert.match(page,/builder-menu-list/);assert.match(admin,/status=eq.PUBLICADO/);assert.match(admin,/encodeURIComponent\(company.id\)/);assert.match(builder,/new URLSearchParams\(location.search\).get\('modulo'\)/);});

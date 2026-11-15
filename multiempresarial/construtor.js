@@ -133,6 +133,9 @@ async function loadCurrentCompany(){
 async function loadModules(){
  modules=await table('sft_builder_modules?select=id,company_id,title,description,fields,status,version,published_at&company_id=eq.'+encodeURIComponent(companyId)+'&order=created_at.desc&limit=30');
  renderModules();
+ const wanted=new URLSearchParams(location.search).get('modulo');
+ const match=modules.find(m=>m.id===wanted && m.status==='PUBLICADO');
+ if(match)await openModule(match);
 }
 function renderModules(){
  const box=$('builder-modules');box.replaceChildren();
