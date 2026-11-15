@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#10283b">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://tusmlfhzwlzwnoxfhomt.supabase.co; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'">
+<link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/construtor.css">
+<title>Construtor de Módulos | Multiempresarial</title>
+</head>
+<body>
+<header class="sitehead">
+ <a class="brand" href="/" aria-label="Multiempresarial — início"><img src="/icon.svg" width="42" height="42" alt=""><span><strong>MULTIEMPRESARIAL</strong><small>Construtor Inteligente · Sistemas Forte Tech</small></span></a>
+ <nav><a href="/admin.html">Painel empresarial</a><a href="/">Página inicial</a></nav>
+</header>
+<main class="shell builder-shell">
+ <p class="eyebrow">PERSONALIZAÇÃO POR EMPRESA</p>
+ <h1>Construtor de Módulos</h1>
+ <p class="intro">Crie formulários e cadastros próprios sem programar. Monte os campos, confira a prévia, salve o rascunho e publique no ambiente do seu CNPJ.</p>
+ <p class="warning"><strong>Versão inicial guiada, sem IA externa.</strong> A criação automática de sistemas inteiros por IA ainda está em desenvolvimento. Nenhuma alteração fiscal, integração bancária ou geração de código livre está habilitada.</p>
+ <div id="builder-status" role="status" aria-live="polite"></div>
+ <section class="builder-auth" id="builder-auth" hidden>
+  <h2>Acesso protegido</h2>
+  <p>Entre pelo painel Multiempresarial com seu e-mail autorizado. Para utilizar este recurso, sua empresa precisa de uma licença ativa.</p>
+  <a class="button primary" href="/admin.html">Entrar no painel</a>
+ </section>
+ <section id="builder-app" hidden>
+  <div class="top-controls">
+    <label for="builder-company">Empresa autorizada <select id="builder-company"></select></label>
+    <span id="builder-access" class="builder-tag"></span>
+  </div>
+  <div class="builder-grid">
+   <section class="builder-card" id="builder-designer">
+    <div class="section-heading"><h2>1. Desenhar meu módulo</h2><span id="builder-edit-state">Novo rascunho</span></div>
+    <p class="muted">Exemplo: controle de equipamentos, solicitações internas ou ordens de serviço. Os campos são cadastrados somente para esta empresa.</p>
+    <form id="builder-module-form">
+      <label for="builder-title">Nome do módulo</label><input id="builder-title" maxlength="90" minlength="3" required placeholder="Ex.: Ordens de serviço">
+      <label for="builder-description">O que o módulo controla?</label><textarea id="builder-description" maxlength="500" rows="2" placeholder="Ex.: chamados, responsáveis e situação"></textarea>
+      <div class="section-heading fields-title"><h3>Campos personalizados</h3><button type="button" id="builder-add-field" class="small-button">Adicionar campo</button></div>
+      <div id="builder-fields"></div>
+      <div class="builder-actions">
+       <button class="button primary" type="submit" id="builder-save">Salvar rascunho</button>
+       <button class="button secondary" type="button" id="builder-preview">Visualizar prévia</button>
+       <button class="button secondary" type="button" id="builder-reset">Novo módulo</button>
+      </div>
+    </form>
+    <p class="muted">Máximo de 12 campos por módulo nesta fase. Campos suportados: texto, número, data, sim/não e seleção.</p>
+   </section>
+   <section class="builder-card">
+     <h2>2. Prévia do formulário</h2>
+     <p class="muted">A prévia não grava dados, não aciona IA e não publica alterações.</p>
+     <div id="builder-preview-box" class="preview"></div>
+     <h2 class="next-title">3. Meus módulos</h2>
+     <div id="builder-modules"></div>
+   </section>
+  </div>
+  <section class="builder-card" id="builder-runtime" hidden>
+   <div class="section-heading"><h2 id="builder-runtime-name">Módulo publicado</h2><span class="builder-tag">Vinculado ao CNPJ</span></div>
+   <p id="builder-runtime-desc" class="muted"></p>
+   <div id="builder-record-notice" class="muted"></div>
+   <form id="builder-record-form" hidden><div id="builder-record-fields" class="record-fields"></div><button class="button primary" type="submit">Salvar registro</button></form>
+   <h3>Registros recentes</h3><div id="builder-records"></div>
+  </section>
+  <section class="builder-card future"><h2>Próximas entregas</h2>
+    <p><strong>Criar sistema independente por IA:</strong> projeto, banco e publicação separados mediante aprovação. <strong>Relatórios e dashboards:</strong> construtor de consultas e indicadores. Ambos ainda em desenvolvimento.</p>
+  </section>
+ </section>
+</main>
+<footer><div class="shell footerline"><span>Multiempresarial · Sistemas Forte Tech · Homologação</span><a href="/admin.html">Painel de empresas</a></div></footer>
+<script type="module" src="/construtor.js"></script>
+</body></html>
