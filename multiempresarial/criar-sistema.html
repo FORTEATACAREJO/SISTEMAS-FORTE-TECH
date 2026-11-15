@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10283b"><meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://tusmlfhzwlzwnoxfhomt.supabase.co; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/construtor.css"><link rel="stylesheet" href="/sistema.css">
+<title>Criar meu sistema | Multiempresarial</title>
+</head>
+<body>
+<header class="sitehead"><a class="brand" href="/" aria-label="Multiempresarial — início"><img src="/icon.svg" width="44" height="44" alt=""><span><strong>MULTIEMPRESARIAL</strong><small>Sistemas Forte Tech · Criação de Sistemas</small></span></a><nav aria-label="Menu"><a href="/construtor.html">Módulos</a><a href="/admin.html">Painel</a><a href="/">Início</a></nav></header>
+<main class="shell builder-shell">
+<p class="eyebrow">CONSTRUTOR INTELIGENTE · NOVA FASE</p>
+<h1>Crie seu próprio sistema sem programar</h1>
+<p class="intro">Descreva o que sua empresa precisa, escolha um modelo e configure telas, cadastros e campos. Veja a prévia antes de solicitar a homologação.</p>
+<p class="warning"><strong>Protótipo de sistemas, não um aplicativo implantado.</strong> O criador de projetos está em homologação: não cria servidor, banco separado, domínio, cobrança nem executa código ou IA. A aprovação abaixo significa <strong>apenas para homologação</strong>, não publicação em produção.</p>
+<div id="system-status" role="status" aria-live="polite"></div>
+<section class="system-stepper" aria-label="Etapas do projeto"><div><span>1</span>Ideia</div><div><span>2</span>Módulos</div><div><span>3</span>Prévia</div><div><span>4</span>Homologação</div></section>
+<section class="system-login" id="system-login"><div><b>Experimente os modelos sem entrar</b><p>Você pode montar e visualizar uma prévia local. Para salvar na empresa, entre pelo painel e utilize uma licença empresarial ativa.</p></div><a class="button secondary" href="/admin.html">Entrar no Multiempresarial</a></section>
+<section id="system-company-box" class="system-company" hidden><label for="system-company">Empresa vinculada<select id="system-company"></select></label><span id="system-company-role" class="builder-tag"></span></section>
+<div class="system-layout">
+  <section class="builder-card" id="system-editor">
+   <h2>1. Começar um projeto</h2>
+   <label for="system-template">Modelo inicial</label>
+   <select id="system-template"><option value="assistencia">Assistência técnica</option><option value="obras">Gestão de obras</option><option value="comercio">Gestão comercial</option><option value="personalizado">Começar do zero</option></select>
+   <label for="system-name">Nome do meu sistema</label><input id="system-name" required minlength="3" maxlength="90" placeholder="Ex.: Controle de Equipamentos">
+   <label for="system-summary">Descrição curta</label><input id="system-summary" maxlength="500" placeholder="Para quais rotinas será usado?">
+   <label for="system-objective">Explique a finalidade</label><textarea id="system-objective" rows="4" maxlength="1000" placeholder="Ex.: preciso controlar manutenção, técnicos, equipamentos e chamados"></textarea>
+   <div class="two-fields">
+    <div><label for="system-sector">Atividade</label><select id="system-sector"><option value="COMERCIO">Comércio</option><option value="INDUSTRIA">Indústria</option><option value="SERVICOS">Serviços</option><option value="CONSTRUCAO">Construção</option><option value="OUTRO">Outras</option></select></div>
+    <div><label for="system-hosting">Hospedagem planejada</label><select id="system-hosting"><option value="NUVEM_COMPARTILHADA">Nuvem compartilhada</option><option value="NUVEM_DEDICADA">Nuvem dedicada — futura</option><option value="SERVIDOR_PROPRIO">Servidor próprio — futuro</option></select></div>
+   </div>
+   <div class="section-heading fields-title"><h2>2. Módulos e cadastros</h2><button class="small-button" id="system-add-module" type="button">Adicionar módulo</button></div>
+   <p class="muted">Configure até seis módulos por projeto e até doze campos em cada módulo. Nenhum campo será criado diretamente em produção.</p>
+   <div id="system-modules"></div>
+   <div class="builder-actions">
+    <button class="button secondary" id="system-show-preview" type="button">Visualizar sistema</button>
+    <button class="button primary" id="system-save" type="button" disabled>Salvar projeto da empresa</button>
+    <button class="button secondary" id="system-new" type="button">Novo projeto</button>
+   </div>
+  </section>
+  <section class="builder-card" id="system-preview-panel">
+   <h2>3. Prévia do meu sistema</h2>
+   <p class="muted">A navegação e os formulários abaixo são apenas uma simulação visual; não gravam operações.</p>
+   <div id="system-preview" class="system-preview"></div>
+   <h2 class="system-list-title">4. Meus projetos</h2>
+   <div id="system-project-list"><p class="muted">Entre na sua empresa para consultar projetos salvos.</p></div>
+  </section>
+</div>
+<section class="builder-card system-caveat"><h2>O que acontece após a aprovação?</h2>
+ <p>O projeto fica registrado como <strong>aprovado para homologação</strong>. A criação automática de um aplicativo executável, banco dedicado, domínio, integrações financeiras e publicação na internet dependerá de desenvolvimento, testes e autorização específica. Nenhuma despesa será iniciada nesta etapa.</p>
+</section>
+</main>
+<footer><div class="shell footerline"><span>Multiempresarial · Sistemas Forte Tech · Homologação</span><a href="/admin.html">Área empresarial protegida</a></div></footer>
+<script type="module" src="/sistema.js"></script>
+</body></html>
