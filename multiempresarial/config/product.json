@@ -51,5 +51,47 @@
     "landingPage": true,
     "internalOperationsRequireAuth": true,
     "redirectURLApprovalPending": true
+  },
+  "builder": {
+    "productPillar": "CRIACAO_DE_SISTEMAS_E_MODULOS_POR_IA",
+    "status": "PLANEJADO_NAO_IMPLEMENTADO",
+    "enabled": false,
+    "privateCompanyModules": {
+      "planned": true,
+      "dynamicForms": true,
+      "dynamicReports": true,
+      "dashboards": true,
+      "workflows": true,
+      "versioning": true,
+      "adminApprovalRequired": true,
+      "tenantBound": true
+    },
+    "ownSystems": {
+      "planned": true,
+      "separateAppProvisioning": true,
+      "separateRepositoryOptional": true,
+      "isolatedEnvironmentRequired": true,
+      "domainCustomizableLater": true,
+      "customerAccessControlled": true,
+      "publishingRequiresApproval": true,
+      "provisioningEnabled": false
+    },
+    "executionPolicy": {
+      "untrustedCodeExecutionAllowed": false,
+      "directProductionCodeModificationAllowed": false,
+      "directTaxEngineModificationAllowed": false,
+      "highRiskChangesRequireHumanApproval": true
+    },
+    "ai": {
+      "forteApiOptionPlanned": true,
+      "chatgptSfwPartnershipRequired": true,
+      "chatgptUserPlanUsageEnabled": false
+    },
+    "billing": {
+      "perCompanyLicense": true,
+      "extraModulesPricingTbd": true,
+      "standaloneAppsPricingTbd": true,
+      "autoBillingEnabled": false
+    }
   }
 }
