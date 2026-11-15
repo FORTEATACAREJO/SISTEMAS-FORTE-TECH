@@ -30,3 +30,5 @@ test('Frontend usa apenas a chave publicável do Supabase e rota do novo host',(
 });
 
 test('SIWC integra plano sem simular parceria nem liberar login',()=>{const product=JSON.parse(read('config/product.json'));assert.equal(cfg.pricing.aiIncludedInOffer,true);assert.equal(product.ai.inferenceEnabled,false);assert.equal(cfg.signInWithChatGPT.status,'AGUARDANDO_APROVACAO');assert.equal(cfg.signInWithChatGPT.chatgptPlanUsageEnabled,false);assert.equal(cfg.signInWithChatGPT.identityLoginEnabled,false);assert.match(read('index.html'),/Sign in with ChatGPT/);});
+
+test('Construtor de Módulos publicado na navegação, sem IA externa nem gravação pública',()=>{const html=read('index.html');const protectedPage=read('construtor.html');const admin=read('admin.html');assert.match(html,/href="\/construtor.html"/);assert.match(admin,/Construtor de Módulos/);assert.match(protectedPage,/Acesso protegido/);assert.match(read('construtor.js'),/get_company_system_license_status/);assert.match(read('sw.js'),/url.pathname.startsWith\('\/construtor'\)/);assert.equal(JSON.parse(read('config\/product.json'.replace('\\','/'))).builder.guidedModules.enabled,true);});

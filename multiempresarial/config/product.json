@@ -54,7 +54,7 @@
   },
   "builder": {
     "productPillar": "CRIACAO_DE_SISTEMAS_E_MODULOS_POR_IA",
-    "status": "PLANEJADO_NAO_IMPLEMENTADO",
+    "status": "MVP_MODULOS_GUIADOS_PUBLICADO_EM_HOMOLOGACAO",
     "enabled": false,
     "privateCompanyModules": {
       "planned": true,
@@ -92,6 +92,26 @@
       "extraModulesPricingTbd": true,
       "standaloneAppsPricingTbd": true,
       "autoBillingEnabled": false
+    },
+    "guidedModules": {
+      "enabled": true,
+      "companyLicenseRequired": true,
+      "requiresAuthentication": true,
+      "designerFields": [
+        "text",
+        "number",
+        "date",
+        "boolean",
+        "select"
+      ],
+      "createDraft": true,
+      "editDraft": true,
+      "publishWithAdminApproval": true,
+      "recordCreationAfterPublish": true,
+      "versionControl": "immutable_after_publish",
+      "maxFieldsPerModule": 12,
+      "maxModulesPerCompany": 30,
+      "aiGeneratedCode": false
     }
   }
 }

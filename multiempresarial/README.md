@@ -50,4 +50,14 @@ O **Construtor Inteligente** não se limita a relatórios. A função principal 
 - **Restrições:** não permitir que IA execute código livre, crie banco arbitrariamente ou altere em produção o motor fiscal, sistemas de outras empresas, meios de pagamento ou credenciais.
 - **Monetização:** assinatura base Multiempresarial, opções futuras por módulo ou sistema adicional e IA Forte por consumo; valores ainda não definidos. A utilização opcional do plano ChatGPT individual depende de aprovação e das regras OpenAI.
 
-Especificação completa: [PROPOSTA_CONSTRUTOR_SISTEMAS_MODULOS.md](PROPOSTA_CONSTRUTOR_SISTEMAS_MODULOS.md). A implementação e a publicação dessas funções ainda **não** foram realizadas; a página pública atual permanece em homologação.
+Especificação completa: [PROPOSTA_CONSTRUTOR_SISTEMAS_MODULOS.md](PROPOSTA_CONSTRUTOR_SISTEMAS_MODULOS.md). A **primeira etapa do construtor de módulos guiados** agora foi implementada no Supabase e no frontend em `/construtor.html`, com status de homologação. A construção automática de sistemas próprios por IA ainda não foi implementada nem liberada.
+
+## Construtor de Módulos — primeira entrega técnica (15/11/2026)
+
+- Frontend `/construtor.html` e `construtor.js`: construtor guiado de módulos, tipos de campos permitidos, prévia, rascunho, edição, publicação e registro de dados, sem JavaScript ou SQL arbitrário.
+- Banco Supabase `tusmlfhzwlzwnoxfhomt`: `sft_builder_modules`, `sft_builder_records`, auditoria privada `private.sft_builder_audit`, funções RPC validadas e RLS obrigatória por empresa/licença.
+- Gravações e publicações realizadas por RPC server-side apenas para administrador, registros inseridos por ADMIN/OPERADOR, consultas de membros licenciados; cada módulo pertence a exatamente um CNPJ, com versão de publicação imutável nesta etapa.
+- Critério: mínimo um campo e máximo 12; tipos texto, número, data, sim/não e seleção; sem processamento por IA.
+- Testes transacionais: duas empresas fictícias + usuário consulta, tentativa de leitura cruzada, gravação indevida e alteração de publicado foram rejeitadas; testes revertidos.
+- Não existem usuários nem empresas clientes reais ativos neste banco. Login por e-mail no domínio Render depende de configurar Redirect URL e validar um usuário Master. Esta entrega é **homologação**, não liberação comercial.
+- Recursos pendentes: editor de sistemas independentes, dashboards, modelos com IA Forte, login ChatGPT e cobrança. Nenhuma contratação adicional.
