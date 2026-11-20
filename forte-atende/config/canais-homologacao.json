@@ -18,17 +18,12 @@
     "connection_status": "pendente_validacao_em_tempo_real"
   },
   "email": {
-    "primary": "emails@forteatacarejo.com.br",
-    "primary_authorized_by_user": true,
-    "primary_access_verified": false,
-    "primary_active": false,
-    "primary_status": "pendente_criacao_ou_liberacao_e_conexao_na_hostinger",
-    "operational_mailbox": "contato@forteatacarejo.com.br",
-    "operational_mailbox_access_verified": true,
-    "operational_mailbox_status": "conectada",
+    "primary": "contato@forteatacarejo.com.br",
     "provider": "Hostinger Mail",
-    "requested_additional_mailbox_as_written": "emails@forteatacarejo.com.br",
-    "requested_additional_mailbox_status": "grafia_confirmada_nao_visivel_entre_caixas_acessiveis",
+    "mailbox_access_verified": true,
+    "mailbox_status": "conectada",
+    "mailbox_label": "E-mails",
+    "note": "emails@forteatacarejo.com.br citado apenas como exemplo, nao deve ser criado ou configurado",
     "additional_mailbox_enabled": false,
     "promotions_outbound_enabled": false
   },
