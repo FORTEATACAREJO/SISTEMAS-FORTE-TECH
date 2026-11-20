@@ -13,13 +13,10 @@ test("preserva webhook compartilhado sem ativar disparos",()=>{
   assert.equal(config.whatsapp.promotional_campaigns_enabled,false);
   assert.equal(config.safeguards.do_not_change_fiscal_webhook,true);
 });
-test("confirma e-mail principal desejado sem fingir que a caixa está ativa",()=>{
-  assert.equal(config.email.primary,"emails@forteatacarejo.com.br");
-  assert.equal(config.email.primary_authorized_by_user,true);
-  assert.equal(config.email.primary_access_verified,false);
-  assert.equal(config.email.primary_active,false);
-  assert.equal(config.email.operational_mailbox,"contato@forteatacarejo.com.br");
-  assert.equal(config.email.operational_mailbox_access_verified,true);
+test("utiliza a caixa contato verificada e trata emails como exemplo",()=>{
+  assert.equal(config.email.primary,"contato@forteatacarejo.com.br");
+  assert.equal(config.email.mailbox_access_verified,true);
+  assert.equal(config.email.mailbox_label,"E-mails");
   assert.equal(config.email.additional_mailbox_enabled,false);
   assert.equal(config.email.promotions_outbound_enabled,false);
   assert.equal(config.gmail.archive,"entradasforteatacarejo@gmail.com");
