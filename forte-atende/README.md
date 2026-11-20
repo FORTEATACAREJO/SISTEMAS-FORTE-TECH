@@ -93,3 +93,9 @@ No Gmail central foram encontradas três mensagens intituladas `TESTE FORTE ATAC
 2. **Saída:** responder a partir da mesma identidade corporativa que recebeu a mensagem, **apenas quando a conexão Hostinger específica estiver autorizada e verificada**. Hoje as conexões chamadas Gerência/Orçamentos retornaram a caixa Contato; não tratá-las como autorização de envio `From: gerencia@` ou `From: orcamentos@`.
 
 A [configuração não secreta](config/canais-homologacao.json) registra os três canais, o Gmail central, a confirmação de teste e as limitações de envio. Nenhum token, senha ou endereço fictício é usado como remetente.
+
+### Preparação de roteamento
+- [Identificação do destinatário original](email/roteamento.mjs) e [testes](email/roteamento.test.mjs): classificar `To`/`Cc` de mensagens encaminhadas pelo Gmail central como Gerência, Contato ou Orçamentos.
+- Se duas caixas corporativas forem destinatárias da mesma mensagem, ou o endereço original não estiver visível, manter em **triagem humana**, sem escolher um remetente automaticamente.
+- A função de elegibilidade da identidade de resposta é apenas uma conferência local. **Não envia mensagens**, não substitui autorização de operador e não modifica configurações das contas Hostinger.
+- O workflow de testes incluiu os cenários de roteamento, além das validações das campanhas e dos canais.
