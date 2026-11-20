@@ -18,18 +18,49 @@
     "connection_status": "pendente_validacao_em_tempo_real"
   },
   "email": {
-    "primary": "contato@forteatacarejo.com.br",
-    "provider": "Hostinger Mail",
-    "mailbox_access_verified": true,
-    "mailbox_status": "conectada",
     "mailbox_label": "E-mails",
-    "note": "emails@forteatacarejo.com.br citado apenas como exemplo, nao deve ser criado ou configurado",
-    "additional_mailbox_enabled": false,
+    "provider": "Hostinger Mail",
+    "primary": "contato@forteatacarejo.com.br",
+    "mailboxes": [
+      {
+        "unit": "gerencia",
+        "display": "Gerência",
+        "address": "gerencia@forteatacarejo.com.br",
+        "forward_to": "entradasforteatacarejo@gmail.com",
+        "forwarding_test_received_on": "2026-11-20",
+        "direct_hostinger_access_verified": false,
+        "send_as_verified": false
+      },
+      {
+        "unit": "contato",
+        "display": "Contato",
+        "address": "contato@forteatacarejo.com.br",
+        "forward_to": "entradasforteatacarejo@gmail.com",
+        "forwarding_test_received_on": "2026-11-20",
+        "direct_hostinger_access_verified": true,
+        "send_as_verified": true
+      },
+      {
+        "unit": "orcamentos",
+        "display": "Orçamentos",
+        "address": "orcamentos@forteatacarejo.com.br",
+        "forward_to": "entradasforteatacarejo@gmail.com",
+        "forwarding_test_received_on": "2026-11-20",
+        "direct_hostinger_access_verified": false,
+        "send_as_verified": false
+      }
+    ],
+    "central_inbox": "entradasforteatacarejo@gmail.com",
+    "central_inbox_provider": "Gmail",
+    "central_inbox_connected": true,
+    "forwarding_status": "recebimento_dos_tres_testes_confirmado_em_2026_11_20",
+    "sending_identity_rule": "responder_pelo_endereco_original_somente_se_identidade_hostinger_autorizada_e_verificada; caso contrario, rascunho_pendente_revisao",
+    "example_not_mailbox": "emails@forteatacarejo.com.br",
     "promotions_outbound_enabled": false
   },
   "gmail": {
     "archive": "entradasforteatacarejo@gmail.com",
-    "usage": "receber os encaminhamentos e manter histórico, sem se apresentar como remetente corporativo",
+    "usage": "caixa unificada de recebimento e arquivo para gerencia, contato e orcamentos; preservar destinatario original em cada conversa",
     "connected": true
   },
   "safeguards": {
