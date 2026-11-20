@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "application": "FORTE ATENDE",
+  "channel_configuration": "homologacao",
+  "whatsapp": {
+    "phone_e164": "+5564999172700",
+    "display": "+55 (64) 99917-2700",
+    "meta_app": "FORTE ATACAREJO APP",
+    "waba_id": "1081614524680450",
+    "phone_number_id": "1278417945364665",
+    "identity_source": "identificadores anteriores da Forte, pendentes de confirmação na sessão Meta atual",
+    "gateway": "https://forte-whatsapp-api.onrender.com/webhook",
+    "existing_gateway_reuse": true,
+    "do_not_override_shared_webhook": true,
+    "has_direct_meta_developers_access": false,
+    "outbound_messages_enabled": false,
+    "promotional_campaigns_enabled": false,
+    "connection_status": "pendente_validacao_em_tempo_real"
+  },
+  "email": {
+    "primary": "contato@forteatacarejo.com.br",
+    "provider": "Hostinger Mail",
+    "mailbox_access_verified": true,
+    "requested_additional_mailbox_as_written": "emails@forteatacatejo.com.br",
+    "requested_additional_mailbox_status": "nao_confirmada_grafia_ou_existencia",
+    "recommended_domain_spelling": "forteatacarejo.com.br",
+    "additional_mailbox_enabled": false,
+    "promotions_outbound_enabled": false
+  },
+  "gmail": {
+    "archive": "entradasforteatacarejo@gmail.com",
+    "usage": "receber os encaminhamentos e manter histórico, sem se apresentar como remetente corporativo",
+    "connected": true
+  },
+  "safeguards": {
+    "send_real_message": false,
+    "do_not_store_tokens_in_git": true,
+    "do_not_change_fiscal_webhook": true,
+    "do_not_route_messages_to_unapproved_recipient": true,
+    "require_opt_in_and_approved_templates_for_marketing": true
+  }
+}
