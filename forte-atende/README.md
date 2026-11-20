@@ -66,8 +66,15 @@ Arquivos-fonte e versões quadradas (512 e 192 px) foram preparados como artefat
 - [Configuração não secreta em homologação](config/canais-homologacao.json).
 - WhatsApp oficial indicado: **+55 (64) 99917-2700**, números de referência da Meta registrados anteriormente: WABA **1081614524680450**, Phone Number ID **1278417945364665**, Meta App **FORTE ATACAREJO APP**. O usuário afirma que o número é aprovado, mas **não foi verificado acesso atual à Meta Developers nem status de registro operacional ao vivo nesta etapa**.
 - O gateway compartilhado **forte-whatsapp-api** e `order-communications` existem no FORTE ATACAREJO OPERACIONAL. Reutilizar sem substituir o callback, sem alterar segredos nem quebrar integrações existentes, especialmente Fiscal.
-- Hostinger Mail confirmada: **contato@forteatacarejo.com.br**. A conta `emails@forteatacatejo.com.br` foi mencionada pelo usuário, porém tem domínio diferente do `forteatacarejo.com.br` conhecido e não existe entre as caixas acessíveis pela conexão Hostinger; aguarda esclarecimento e criação, caso desejada.
+- **Endereço principal desejado, com grafia confirmada pelo usuário:** `emails@forteatacarejo.com.br`. A conexão Hostinger consultada ainda retorna somente `contato@forteatacarejo.com.br`; portanto `emails@` está **pendente de criação/liberação e conexão**, sem recebimento ou envio comprovado. O endereço `contato@` continua como caixa operacional já conectada.
 - Gmail conectado selecionado para arquivo e encaminhamentos: **entradasforteatacarejo@gmail.com**. Não usar como identidade de envio do canal corporativo.
 - A tela [painel.html](painel.html) foi atualizada para exibir o número e sinalizar a integração pendente, mas **não lê mensagens reais da Meta nem inicia envios**.
 - Antes da ativação: validar Phone Number ID/WABA e permissões por chamada Meta autorizada, confirmar webhook e eventos, sessão e RLS, autenticação Hostinger, testagem ponta a ponta autorizada, campanhas com opt-in e templates de marketing aprovados.
 - Comando local de verificação: `node --test forte-atende/config/canais.test.mjs forte-atende/campanhas/core.test.mjs`.
+
+## Confirmação da caixa principal — 20/11/2026
+- O usuário confirmou **emails@forteatacarejo.com.br** como endereço correto a utilizar no FORTE ATENDE.
+- A [configuração de canais](config/canais-homologacao.json) define esse endereço como `email.primary` **pretendido**, com `primary_active=false` e `primary_access_verified=false`; a caixa já acessível permanece em `email.operational_mailbox=contato@forteatacarejo.com.br`.
+- A [prévia da interface](painel.html) identifica o novo endereço e seu estado de implantação, sem simular que recebe e-mails reais.
+- Depois de criar/autorizar a caixa no painel Hostinger, conferir acesso separado pela integração Hostinger Mail, envio de teste para o novo endereço, resposta autorizada saindo da identidade correta e encaminhamento/arquivamento para `entradasforteatacarejo@gmail.com`.
+- **Não migrar os remetentes reais nem alterar encaminhamentos existentes** antes de verificar todos esses passos. Não enviar campanhas pela caixa corporativa sem solução adequada de e-mail marketing e consentimento.
