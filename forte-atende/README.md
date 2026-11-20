@@ -48,3 +48,11 @@ Fontes para implantação:
 - [Hostinger — envio em massa](https://www.hostinger.com/support/1583510-is-mass-mailing-supported-at-hostinger/)
 - [Hostinger — diferença entre Reach e Business Email](https://www.hostinger.com/support/hostinger-reach-and-business-email-whats-the-difference-and-why-you-need-both/)
 - [ANPD — legítimo interesse e LGPD](https://www.gov.br/anpd/pt-br/assuntos/noticias/anpd-lanca-guia-orientativo-sobre-legitimo-interesse)
+
+## Painel integrado de atendimento — prévia de layout
+- [Abrir interface (HTML)](painel.html) — visualização lado a lado, **e-mail à esquerda e WhatsApp à direita (50/50)** em telas amplas.
+- Listas de mensagens e conversas independentes, filtros, busca, leitura, marcação de favoritas, respostas e rascunhos locais.
+- Botão Campanhas: selecionar grupos fictícios e montar prévia promocional; disparo desabilitado.
+- Navegação responsiva: no celular alternar entre as abas E-mail e WhatsApp e abrir/fechar a conversa selecionada.
+- **Somente dados fictícios**, sem credenciais embutidas, sem envio de e-mails ou WhatsApp, sem consulta ao provedor, sem persistência de dados.
+- A interface foi conferida no navegador em desktop e celular, com testes manuais de preparação de campanhas, rascunho de e-mail, rascunho de mensagem e navegação responsiva. Integrações reais seguem pendentes.
