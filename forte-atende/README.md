@@ -61,3 +61,13 @@ Fontes para implantação:
 O usuário aprovou o ícone FORTE ATENDE que integra visualmente os símbolos de WhatsApp e Gmail em um único quadrado arredondado, com transição verde, turquesa e branco e assinatura FORTE ATENDE. Este é o padrão visual a ser adotado na interface, PWA, favicon, instalação em dispositivos e materiais de apresentação.
 
 Arquivos-fonte e versões quadradas (512 e 192 px) foram preparados como artefatos da conversa, **mas ainda precisam ser adicionados como arquivos binários ao repositório**. Não substituir a arte aprovada por uma recriação aproximada. Validar o uso das marcas de terceiros conforme suas respectivas diretrizes antes de distribuir comercialmente.
+
+## Canais escolhidos para integração — 20/11/2026
+- [Configuração não secreta em homologação](config/canais-homologacao.json).
+- WhatsApp oficial indicado: **+55 (64) 99917-2700**, números de referência da Meta registrados anteriormente: WABA **1081614524680450**, Phone Number ID **1278417945364665**, Meta App **FORTE ATACAREJO APP**. O usuário afirma que o número é aprovado, mas **não foi verificado acesso atual à Meta Developers nem status de registro operacional ao vivo nesta etapa**.
+- O gateway compartilhado **forte-whatsapp-api** e `order-communications` existem no FORTE ATACAREJO OPERACIONAL. Reutilizar sem substituir o callback, sem alterar segredos nem quebrar integrações existentes, especialmente Fiscal.
+- Hostinger Mail confirmada: **contato@forteatacarejo.com.br**. A conta `emails@forteatacatejo.com.br` foi mencionada pelo usuário, porém tem domínio diferente do `forteatacarejo.com.br` conhecido e não existe entre as caixas acessíveis pela conexão Hostinger; aguarda esclarecimento e criação, caso desejada.
+- Gmail conectado selecionado para arquivo e encaminhamentos: **entradasforteatacarejo@gmail.com**. Não usar como identidade de envio do canal corporativo.
+- A tela [painel.html](painel.html) foi atualizada para exibir o número e sinalizar a integração pendente, mas **não lê mensagens reais da Meta nem inicia envios**.
+- Antes da ativação: validar Phone Number ID/WABA e permissões por chamada Meta autorizada, confirmar webhook e eventos, sessão e RLS, autenticação Hostinger, testagem ponta a ponta autorizada, campanhas com opt-in e templates de marketing aprovados.
+- Comando local de verificação: `node --test forte-atende/config/canais.test.mjs forte-atende/campanhas/core.test.mjs`.
