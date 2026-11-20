@@ -66,7 +66,7 @@ Arquivos-fonte e versões quadradas (512 e 192 px) foram preparados como artefat
 - [Configuração não secreta em homologação](config/canais-homologacao.json).
 - WhatsApp oficial indicado: **+55 (64) 99917-2700**, números de referência da Meta registrados anteriormente: WABA **1081614524680450**, Phone Number ID **1278417945364665**, Meta App **FORTE ATACAREJO APP**. O usuário afirma que o número é aprovado, mas **não foi verificado acesso atual à Meta Developers nem status de registro operacional ao vivo nesta etapa**.
 - O gateway compartilhado **forte-whatsapp-api** e `order-communications` existem no FORTE ATACAREJO OPERACIONAL. Reutilizar sem substituir o callback, sem alterar segredos nem quebrar integrações existentes, especialmente Fiscal.
-- **E-mail operacional conectado:** `contato@forteatacarejo.com.br` (Hostinger Mail). A expressão `emails@forteatacarejo.com.br` foi um **exemplo**, não um endereço solicitado para criação, conexão ou envio. Na interface, “E-mails” é o nome da seção.
+- **E-mails corporativos:** `gerencia@forteatacarejo.com.br`, `contato@forteatacarejo.com.br`, `orcamentos@forteatacarejo.com.br`; todos têm encaminhamento de teste recebido na caixa Gmail central. A conexão Hostinger disponível neste chat ainda dá acesso direto somente à caixa Contato. `emails@forteatacarejo.com.br` foi somente um exemplo, não será criado.
 - Gmail conectado selecionado para arquivo e encaminhamentos: **entradasforteatacarejo@gmail.com**. Não usar como identidade de envio do canal corporativo.
 - A tela [painel.html](painel.html) foi atualizada para exibir o número e sinalizar a integração pendente, mas **não lê mensagens reais da Meta nem inicia envios**.
 - Antes da ativação: validar Phone Number ID/WABA e permissões por chamada Meta autorizada, confirmar webhook e eventos, sessão e RLS, autenticação Hostinger, testagem ponta a ponta autorizada, campanhas com opt-in e templates de marketing aprovados.
@@ -75,6 +75,21 @@ Arquivos-fonte e versões quadradas (512 e 192 px) foram preparados como artefat
 ## Esclarecimento sobre a expressão E-mails — 20/11/2026
 - O usuário esclareceu que `emails@forteatacarejo.com.br` era apenas um exemplo, não uma conta a criar ou cadastrar.
 - Canal corporativo comprovadamente conectado: `contato@forteatacarejo.com.br` (Hostinger Mail).
-- `entradasforteatacarejo@gmail.com` permanece conta de arquivo/recebimento de encaminhamentos, conforme configuração anterior; o sucesso de cada mensagem encaminhada precisa ser validado com teste.
+- `entradasforteatacarejo@gmail.com` permanece conta de arquivo/recebimento dos encaminhamentos; os três e-mails de teste recebidos em 20/11/2026 (um para cada caixa) foram localizados e tiveram o cabeçalho `Delivered-To: entradasforteatacarejo@gmail.com` conferido.
 - Na interface, exibir a seção genérica **E-mails**, com a caixa operacional conectada identificada. Não criar endereços novos por inferência.
 - A configuração não libera envios em massa nem conexão Meta, que permanecem pendentes de homologação.
+
+## Arquitetura de três caixas com um arquivo central — 20/11/2026
+**Endereços corretos (conferidos nas mensagens de teste reais recebidas pelo Gmail):**
+- Gerência: `gerencia@forteatacarejo.com.br`
+- Contato: `contato@forteatacarejo.com.br`
+- Orçamentos: `orcamentos@forteatacarejo.com.br`
+- Destino central de encaminhamentos: `entradasforteatacarejo@gmail.com`.
+
+No Gmail central foram encontradas três mensagens intituladas `TESTE FORTE ATACAREJO — Encaminhamento Hostinger 1/3`, `2/3` e `3/3` de 20/11/2026, cada uma endereçada à caixa correspondente. Todas chegaram ao endereço Gmail central conforme cabeçalho Delivered-To. Isso comprova o **teste realizado**, não garante entregabilidade contínua futura.
+
+**Separar dois conceitos no FORTE ATENDE:**
+1. **Entrada:** uma caixa central do Gmail recebe os encaminhamentos, preservando `To` original e origem do atendimento. Identificar cada conversa como Gerência, Contato ou Orçamentos; em caso de destinatário original ambíguo, pedir triagem humana, não adivinhar.
+2. **Saída:** responder a partir da mesma identidade corporativa que recebeu a mensagem, **apenas quando a conexão Hostinger específica estiver autorizada e verificada**. Hoje as conexões chamadas Gerência/Orçamentos retornaram a caixa Contato; não tratá-las como autorização de envio `From: gerencia@` ou `From: orcamentos@`.
+
+A [configuração não secreta](config/canais-homologacao.json) registra os três canais, o Gmail central, a confirmação de teste e as limitações de envio. Nenhum token, senha ou endereço fictício é usado como remetente.
