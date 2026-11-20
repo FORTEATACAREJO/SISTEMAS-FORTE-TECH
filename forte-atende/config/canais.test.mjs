@@ -13,13 +13,29 @@ test("preserva webhook compartilhado sem ativar disparos",()=>{
   assert.equal(config.whatsapp.promotional_campaigns_enabled,false);
   assert.equal(config.safeguards.do_not_change_fiscal_webhook,true);
 });
-test("utiliza a caixa contato verificada e trata emails como exemplo",()=>{
-  assert.equal(config.email.primary,"contato@forteatacarejo.com.br");
-  assert.equal(config.email.mailbox_access_verified,true);
-  assert.equal(config.email.mailbox_label,"E-mails");
-  assert.equal(config.email.additional_mailbox_enabled,false);
+test("tres caixas independentes no cadastro apontam ao Gmail unico",()=>{
+  const xs=config.email.mailboxes;
+  assert.equal(xs.length,3);
+  assert.deepEqual(xs.map(x=>x.address),[
+    "gerencia@forteatacarejo.com.br",
+    "contato@forteatacarejo.com.br",
+    "orcamentos@forteatacarejo.com.br"
+  ]);
+  assert.equal(new Set(xs.map(x=>x.address)).size,3);
+  assert.equal(config.email.central_inbox,"entradasforteatacarejo@gmail.com");
+  assert.ok(xs.every(x=>x.forward_to===config.email.central_inbox));
+  assert.ok(xs.every(x=>x.forwarding_test_received_on==="2026-11-20"));
+  assert.equal(config.gmail.archive,config.email.central_inbox);
+  assert.equal(config.email.example_not_mailbox,"emails@forteatacarejo.com.br");
+});
+test("nao confunde encaminhamento verificado com acesso Hostinger independente",()=>{
+  const xs=Object.fromEntries(config.email.mailboxes.map(x=>[x.unit,x]));
+  assert.equal(xs.contato.direct_hostinger_access_verified,true);
+  assert.equal(xs.gerencia.direct_hostinger_access_verified,false);
+  assert.equal(xs.orcamentos.direct_hostinger_access_verified,false);
+  assert.equal(xs.gerencia.send_as_verified,false);
+  assert.equal(xs.orcamentos.send_as_verified,false);
   assert.equal(config.email.promotions_outbound_enabled,false);
-  assert.equal(config.gmail.archive,"entradasforteatacarejo@gmail.com");
 });
 test("nao contem tokens ou secrets em canais publicos",()=>{
   const texto=JSON.stringify(config).toLowerCase();
