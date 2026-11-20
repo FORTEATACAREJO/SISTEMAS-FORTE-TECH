@@ -56,3 +56,8 @@ Fontes para implantação:
 - Navegação responsiva: no celular alternar entre as abas E-mail e WhatsApp e abrir/fechar a conversa selecionada.
 - **Somente dados fictícios**, sem credenciais embutidas, sem envio de e-mails ou WhatsApp, sem consulta ao provedor, sem persistência de dados.
 - A interface foi conferida no navegador em desktop e celular, com testes manuais de preparação de campanhas, rascunho de e-mail, rascunho de mensagem e navegação responsiva. Integrações reais seguem pendentes.
+
+## Identidade visual aprovada — 20/11/2026
+O usuário aprovou o ícone FORTE ATENDE que integra visualmente os símbolos de WhatsApp e Gmail em um único quadrado arredondado, com transição verde, turquesa e branco e assinatura FORTE ATENDE. Este é o padrão visual a ser adotado na interface, PWA, favicon, instalação em dispositivos e materiais de apresentação.
+
+Arquivos-fonte e versões quadradas (512 e 192 px) foram preparados como artefatos da conversa, **mas ainda precisam ser adicionados como arquivos binários ao repositório**. Não substituir a arte aprovada por uma recriação aproximada. Validar o uso das marcas de terceiros conforme suas respectivas diretrizes antes de distribuir comercialmente.
