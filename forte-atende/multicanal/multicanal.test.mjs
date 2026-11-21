@@ -5,6 +5,7 @@ import {listarProvedores,definirConexao} from "./catalogo.mjs";
 import {CentralMulticanal,MemoriaDeHomologacao} from "./central.mjs";
 import {criarAdaptadores} from "./adaptadores.mjs";
 import {extrairEventosMeta,assinaturaMetaValida,receberWebhookMeta} from "./webhook-meta.mjs";
+import {criarTransporteImapSmtp} from "./transporte-imap-smtp.mjs";
 
 const admin=(tenantId="empresa1")=>({tenantId,userId:"master-1",role:"master"});
 const atendente=(tenantId="empresa1")=>({tenantId,userId:"atendente-2",role:"atendente"});
@@ -170,4 +171,31 @@ test("Graph retorna aceite, nao uma entrega, e BSP permanece modular",async()=>{
  assert.equal(r.externalId,"graph-accepted:example-request");
  const imap=definirConexao({id:"imap001",tenantId:"empresa1",provider:"imap-smtp",identity:"c@example.com",secretRef:"vault/imap001"});
  await assert.rejects(()=>adapters["imap-smtp"].verify(imap),/não instalado/);
+});
+
+test("IMAP SMTP serve qualquer caixa com TLS, identidade de envio verificada e sem rede no teste",async()=>{
+ class FakeImap {
+   constructor(config){assert.equal(config.secure,true);this.mailbox={exists:1,uidValidity:42};}
+   async connect(){return true;}
+   async getMailboxLock(){return {release(){}};}
+   async *fetch(){yield {uid:16,source:Buffer.from("mime")};}
+   async logout(){}
+ }
+ const sent=[];
+ const nodemailer={createTransport:opts=>({async verify(){return true;},async sendMail(d){sent.push(d);return {messageId:"<fake-123@example.com>"};},close(){}})};
+ const simpleParser=async()=>({from:{value:[{address:"cliente@example.com"}]},to:{value:[{address:"suporte@example.com"}]},subject:"Pedido",text:"Mensagem",date:new Date("2026-11-20T10:00:00Z")});
+ const driver=criarTransporteImapSmtp({ImapFlow:FakeImap,nodemailer,simpleParser});
+ const c=definirConexao({id:"imap001",tenantId:"empresa1",provider:"imap-smtp",identity:"suporte@example.com",secretRef:"vault/imap001"});
+ const secret={imap:{host:"imap.example.com",port:993,user:"suporte@example.com",password:"nao-real"},smtp:{host:"smtp.example.com",port:465,user:"suporte@example.com",password:"nao-real"},verifiedSender:"suporte@example.com"};
+ const check=await driver.verify(c,secret);
+ assert.deepEqual([check.authenticated,check.canReceive,check.canSend],[true,true,true]);
+ const m=await driver.list(c,secret);
+ assert.equal(m[0].externalId,"42:16");
+ assert.equal(m[0].text,"Mensagem");
+ const r=await driver.send(c,secret,{to:"cliente@example.com",subject:"Re: Pedido",text:"Olá"});
+ assert.equal(r.acceptedOnly,true);
+ assert.equal(sent[0].from,"suporte@example.com");
+ assert.equal(sent[0].to,"cliente@example.com");
+ await assert.rejects(()=>driver.send(c,{...secret,verifiedSender:"qualquer@example.com"},{to:"cliente@example.com",subject:"Oi",text:"Teste"}),/não verificada/);
+ await assert.rejects(()=>driver.list(c,{...secret,imap:{...secret.imap,port:143}}),/TLS/);
 });
