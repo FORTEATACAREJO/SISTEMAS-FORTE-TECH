@@ -72,8 +72,8 @@ test("icones declarados sao arquivos validos, nao apenas caminhos",()=>{
    const svg=bytes.toString("utf8");
    assert.match(svg,/<svg\\b/);
    const [w,h]=icon.sizes.split("x").map(Number);
-   assert.match(svg,new RegExp('width=["\\']'+w+'["\\']'));
-   assert.match(svg,new RegExp('height=["\\']'+h+'["\\']'));
+   assert.ok(svg.includes('width="'+w+'"'),"Largura SVG divergente");
+   assert.ok(svg.includes('height="'+h+'"'),"Altura SVG divergente");
   }else assert.fail("Tipo de icone nao suportado: "+icon.type);
  }
 });
