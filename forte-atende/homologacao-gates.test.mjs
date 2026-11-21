@@ -70,7 +70,7 @@ test("icones declarados sao arquivos validos, nao apenas caminhos",()=>{
    assert.equal(height,expectedHeight,"altura PNG divergente");
   }else if(icon.type==="image/svg+xml"){
    const svg=bytes.toString("utf8");
-   assert.match(svg,/<svg\\b/);
+   assert.ok(svg.startsWith("<svg "), "Elemento SVG ausente");
    const [w,h]=icon.sizes.split("x").map(Number);
    assert.ok(svg.includes('width="'+w+'"'),"Largura SVG divergente");
    assert.ok(svg.includes('height="'+h+'"'),"Altura SVG divergente");
