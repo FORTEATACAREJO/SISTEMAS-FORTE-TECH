@@ -1,10 +1,119 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>FORTE ATENDE | Caixa real em homologação</title><style>body{font-family:system-ui,sans-serif;margin:0;background:#f1f6f8;color:#123847}header{background:#123847;color:white;padding:22px}main{max-width:850px;margin:auto;padding:18px}.card{background:white;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 1px 5px #0001}input,button{padding:13px;border:1px solid #b9cbd1;border-radius:10px;font:inherit;max-width:100%;box-sizing:border-box}input{display:block;width:100%;margin:9px 0}button{background:#008c74;color:white;cursor:pointer}button:disabled{opacity:.5}small{color:#5c707a}.msg{background:#edf8f4;padding:12px;margin:9px 0;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}.error{color:#b22323}#inbox{display:none}</style></head><body><header><strong>FORTE ATENDE</strong><div>Caixa real • Homologação • Sem conversas fictícias</div></header><main><section id="login" class="card"><h2>Entrar com a conta do FORTE OPERACIONAL</h2><p>Somente usuários já cadastrados e autorizados. Não cria contas novas.</p><form id="form"><input id="email" type="email" autocomplete="username" placeholder="E-mail da conta Supabase" required><input id="senha" type="password" autocomplete="current-password" placeholder="Senha" required><button>Entrar</button></form><p id="loginStatus" role="status"></p></section><section id="inbox"><div class="card"><button id="atualizar">Atualizar mensagens</button> <button id="sair">Sair</button><p id="status" role="status"></p></div><div id="conversas"></div></section></main><script type="module">
-import{createClient}from"https://esm.sh/@supabase/supabase-js@2.57.4";
-const db=createClient("https://gtwecfyffjszghnvtlzr.supabase.co","sb_publishable_RP8g0VoZdWh8e9R7Nb9mYw_GSXjSuD3");
-const endpoint="https://gtwecfyffjszghnvtlzr.supabase.co/functions/v1/forte-atende-whatsapp";
-const $=id=>document.getElementById(id);
-function t(tag,content){const e=document.createElement(tag);e.textContent=content;return e}
-async function load(){const {data:{session}}=await db.auth.getSession();if(!session){$("login").style.display="block";$("inbox").style.display="none";return} $("login").style.display="none";$("inbox").style.display="block";$("status").textContent="Consultando banco...";try{const r=await fetch(endpoint,{headers:{Authorization:"Bearer "+session.access_token,apikey:"sb_publishable_RP8g0VoZdWh8e9R7Nb9mYw_GSXjSuD3"}});const j=await r.json();if(!r.ok)throw Error(j.error||"Erro de consulta");$("conversas").replaceChildren();for(const c of j.conversas||[]){const card=document.createElement("article");card.className="card";card.append(t("h3",c.identidade+" • "+c.canal));for(const m of c.mensagens||[]){const e=t("div",m.texto);e.className="msg";card.append(e,t("small",new Date(m.recebida_em).toLocaleString("pt-BR")))}$("conversas").append(card)}$("status").textContent=(j.conversas||[]).length+" conversa(s) reais no banco";}catch(e){$("status").textContent="Consulta não disponível: "+e.message;$("status").className="error"}}
-$("form").addEventListener("submit",async e=>{e.preventDefault();$("loginStatus").textContent="Autenticando...";const {error}=await db.auth.signInWithPassword({email:$("email").value,password:$("senha").value});if(error){$("loginStatus").textContent="Não foi possível autenticar: "+error.message;return}await load()});
-$("atualizar").onclick=load;$("sair").onclick=async()=>{await db.auth.signOut();await load()};await load();
-</script></body></html>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>FORTE ATENDE | Caixa real em homologação</title><style>body{font-family:system-ui,sans-serif;margin:0;background:#f1f6f8;color:#123847}header{background:#123847;color:white;padding:22px}main{max-width:850px;margin:auto;padding:18px}.card{background:white;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 1px 5px #0001}input,button{padding:13px;border:1px solid #b9cbd1;border-radius:10px;font:inherit;max-width:100%;box-sizing:border-box}input{display:block;width:100%;margin:9px 0}button{background:#008c74;color:white;cursor:pointer}button:disabled{opacity:.5}small{color:#5c707a}.msg{background:#edf8f4;padding:12px;margin:9px 0;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}.error{color:#b22323}#inbox{display:none}label{display:block;margin-top:12px}</style></head><body><header><strong>FORTE ATENDE</strong><div>Caixa real • Homologação • Sem conversas fictícias</div></header><main>
+  <section id="login" class="card">
+    <h2>Entrar com CPF</h2>
+    <p>Use o CPF e a senha cadastrados no FORTE OPERACIONAL.</p>
+    <form id="form">
+      <label for="cpf">CPF</label>
+      <input id="cpf" type="text" inputmode="numeric" autocomplete="username" maxlength="14" required>
+      <label for="senha">Senha</label>
+      <input id="senha" type="password" inputmode="numeric" autocomplete="current-password" required>
+      <button id="entrar" type="submit">Entrar</button>
+    </form>
+    <p id="loginStatus" role="status"></p>
+  </section>
+  <section id="inbox">
+    <div class="card"><button id="atualizar">Atualizar mensagens</button> <button id="sair">Sair</button><p id="status" role="status"></p></div>
+    <div id="conversas"></div>
+  </section>
+</main>
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
+
+const url = "https://gtwecfyffjszghnvtlzr.supabase.co";
+const publishableKey = "sb_publishable_RP8g0VoZdWh8e9R7Nb9mYw_GSXjSuD3";
+const db = createClient(url, publishableKey);
+const endpoint = url + "/functions/v1/forte-atende-whatsapp";
+const $ = id => document.getElementById(id);
+
+function t(tag, content) {
+  const element = document.createElement(tag);
+  element.textContent = content;
+  return element;
+}
+
+async function load() {
+  const { data: { session } } = await db.auth.getSession();
+  $("login").style.display = session ? "none" : "block";
+  $("inbox").style.display = session ? "block" : "none";
+  $("conversas").replaceChildren();
+  if (!session) return;
+
+  const status = $("status");
+  status.className = "";
+  status.textContent = "Consultando banco...";
+  try {
+    const response = await fetch(endpoint, {
+      headers: { Authorization: "Bearer " + session.access_token, apikey: publishableKey }
+    });
+    const data = await response.json();
+    if (!response.ok) throw Error(data.error || "Erro de consulta");
+
+    for (const conversation of data.conversas || []) {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.append(t("h3", conversation.identidade + " • " + conversation.canal));
+      for (const message of conversation.mensagens || []) {
+        const element = t("div", message.texto);
+        element.className = "msg";
+        card.append(element, t("small", new Date(message.recebida_em).toLocaleString("pt-BR")));
+      }
+      $("conversas").append(card);
+    }
+    status.textContent = (data.conversas || []).length + " conversa(s) reais no banco";
+  } catch (error) {
+    status.textContent = "Consulta não disponível: " + error.message;
+    status.className = "error";
+  }
+}
+
+$("form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const button = $("entrar");
+  if (button.disabled) return;
+
+  const status = $("loginStatus");
+  const cpf = $("cpf").value.replace(/\D/g, "");
+  const password = $("senha").value;
+  status.className = "error";
+  if (!/^\d{11}$/.test(cpf) || !/^\d{6,}$/.test(password)) {
+    status.textContent = "Informe um CPF com 11 dígitos e a senha numérica cadastrada.";
+    return;
+  }
+
+  button.disabled = true;
+  status.className = "";
+  status.textContent = "Autenticando...";
+  try {
+    const { data, error } = await db.functions.invoke("login-cpf", { body: { cpf, password } });
+    if (error) {
+      const code = error.context?.status;
+      if (code === 401) throw Error("CPF ou senha inválidos, ou acesso não autorizado.");
+      if (code === 429) throw Error("Muitas tentativas. Aguarde um minuto.");
+      throw Error("Não foi possível autenticar. Confira a conexão e tente novamente.");
+    }
+
+    const { error: sessionError } = await db.auth.setSession({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token
+    });
+    if (sessionError) throw Error("Não foi possível abrir a sessão. Tente novamente.");
+
+    $("senha").value = "";
+    status.textContent = "";
+    await load();
+  } catch (error) {
+    status.className = "error";
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$("atualizar").onclick = load;
+$("sair").onclick = async () => {
+  await db.auth.signOut();
+  await load();
+};
+await load();
+</script>
+</body></html>
