@@ -51,7 +51,9 @@ test("cada empresa enxerga apenas suas conexoes e nao pode consultar as de outra
 test("conta nao pode ativar envio sem verificacao real do adaptador",async()=>{
  const s=setup();
  s.registrar(admin(),{id:"email01",provider:"gmail-api",identity:"a@example.com",secretRef:"vault/empresa1/email01"});
- assert.throws(()=>s.rascunho(admin(),{connectionId:"email01",to:"cliente@example.com",subject:"Teste",text:"Olá"}).status==="sent",/never/);
+ const d=s.rascunho(admin(),{connectionId:"email01",to:"cliente@example.com",subject:"Teste",text:"Olá"});
+ assert.equal(d.status,"draft");
+ await assert.rejects(()=>s.enviarAprovado(admin(),d.id),/não aprovada/);
 });
 test("sincronizacao idempotente preserva destinatario original encaminhado",async()=>{
  const s=setup();
