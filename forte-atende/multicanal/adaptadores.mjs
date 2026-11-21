@@ -12,8 +12,8 @@ const SCOPES={
 const hasScope=(secret,allowed)=>Array.isArray(secret.scopes)&&secret.scopes.some(x=>allowed.includes(x));
 const clean=(s,max=10000)=>{const str=String(s??"");if(str.length>max)throw Error("Campo muito longo");return str;};
 const noHeaderBreak=s=>{if(/[\r\n]/.test(s))throw Error("Cabeçalho de e-mail inválido");return s;};
-const base64url=s=>Buffer.from(s).toString("base64url");
 const extractHeaders=headers=>Object.fromEntries((headers??[]).map(h=>[String(h.name).toLowerCase(),h.value]));
+const parseAddress=raw=>{const m=String(raw??"").match(/[a-zA-Z0-9.!#$%&\x27*+/=?^_`{|}~-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}/);return m?m[0].toLowerCase():"";};
 async function expectJson(response){
  if(!response?.ok)throw Error("Provedor recusou operação ("+(response?.status||"rede")+")");
  if(response.status===204||response.status===202)return {};
