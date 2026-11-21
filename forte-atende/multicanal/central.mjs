@@ -47,8 +47,10 @@ function autorizar(actor,tipo){
 }
 function textoCurto(s,max=8000){if(typeof s!=="string"||!s.trim()||s.length>max)throw Error("Texto obrigatório ou muito longo");return s.trim();}
 export class CentralMulticanal {
-  constructor({store=new MemoriaDeHomologacao(),adapters={},clock=()=>new Date()}={}){
+  constructor({store=new MemoriaDeHomologacao(),adapters={},clock=()=>new Date(),
+    consentVerifier=async()=>false,templateVerifier=async()=>false}={}){
     this.store=store;this.adapters=adapters;this.clock=clock;
+    this.consentVerifier=consentVerifier;this.templateVerifier=templateVerifier;
   }
   conexoes(actor){autorizar(actor,"consulta");return this.store.listConnections(actor.tenantId).map(({secretRef,...visible})=>visible);}
   registrar(actor,input){
@@ -114,7 +116,7 @@ export class CentralMulticanal {
     if(filters.connectionId&&!this.store.getConnection(actor.tenantId,filters.connectionId))throw Error("Conexão de outra empresa");
     return this.store.listMessages(actor.tenantId,filters);
   }
-  rascunho(actor,{connectionId,to,subject="",text,kind="service",template=null,replyWindowEndsAt=null,consent=false,unsubscribe=""}){
+  rascunho(actor,{connectionId,to,subject="",text,kind="service",template=null,replyWindowEndsAt=null,consent=false,consentReference="",unsubscribe=""}){
     autorizar(actor,"redacao");
     const c=this.store.getConnection(actor.tenantId,connectionId);
     if(!c)throw Error("Conexão indisponível");
@@ -131,7 +133,7 @@ export class CentralMulticanal {
       if(kind==="campaign"&&template?.category!=="MARKETING")throw Error("Campanha WhatsApp exige template de marketing");
     }
     return this.store.putDraft({id:randomUUID(),tenantId:actor.tenantId,connectionId,
-      to:destination,subject,text:body,kind,template,unsubscribe,consent,
+      to:destination,subject,text:body,kind,template,unsubscribe,consent,consentReference:String(consentReference).slice(0,256),
       status:"draft",createdBy:actor.userId,createdAt:this.clock().toISOString(),approvedBy:null});
   }
   aprovar(actor,draftId){
@@ -146,6 +148,15 @@ export class CentralMulticanal {
     if(!d||d.status!=="approved"||!d.approvedBy)throw Error("Mensagem não aprovada");
     const c=this.store.getConnection(actor.tenantId,d.connectionId);
     if(!c||c.status!=="verified"||!c.sendEnabled)throw Error("Conta não habilitada para envio");
+    if(d.kind==="campaign"){
+      if(!d.consentReference || await this.consentVerifier({tenantId:d.tenantId,connectionId:d.connectionId,to:d.to,reference:d.consentReference})!==true)
+        throw Error("Consentimento de marketing não verificado no servidor");
+    }
+    if(c.canal==="whatsapp"&&d.template?.name){
+      if(await this.templateVerifier({tenantId:d.tenantId,connectionId:d.connectionId,template:d.template})!==true)
+        throw Error("Template WhatsApp não homologado no servidor");
+    }
+    if(this.store.getDraft(actor.tenantId,draftId)?.status!=="approved")throw Error("Envio já reservado");
     const adapter=this.adapters[c.provider];
     if(typeof adapter?.send!=="function")throw Error("Provedor não possui serviço de envio");
     // Reserva ANTES do contato externo: falha de rede -> estado incerto; nunca repetir cegamente.
