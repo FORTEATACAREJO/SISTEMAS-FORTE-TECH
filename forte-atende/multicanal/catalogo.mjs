@@ -34,14 +34,20 @@ export function definirConexao({id,tenantId,provider,identity,secretRef,external
   const tipo=PROVEDORES[provider];
   if(!tipo)throw Error("Provedor desconhecido");
   if(!/^[a-zA-Z0-9/_-]{3,180}$/.test(String(secretRef??"")))throw Error("Referência de segredo inválida");
-  if(settings?.accessToken||settings?.password||settings?.secret||settings?.apiKey)throw Error("Credenciais não podem ser armazenadas na configuração");
+  if(!settings||typeof settings!=="object"||Array.isArray(settings))throw Error("Configurações inválidas");
+  const nomes=Object.keys(settings);
+  if(nomes.some(k=>!["displayName","forwardedAliases"].includes(k)))throw Error("Configuração sensível ou não permitida");
+  if(settings.displayName!==undefined && (typeof settings.displayName!=="string"||settings.displayName.length>120))throw Error("Nome da conta inválido");
+  if(settings.forwardedAliases!==undefined && (!Array.isArray(settings.forwardedAliases)||settings.forwardedAliases.length>30))
+    throw Error("Apelidos de encaminhamento inválidos");
+  const aliases=(settings.forwardedAliases??[]).map(v=>normalizarIdentidade("email",v));
   if(provider==="whatsapp-cloud" && !/^\d{8,32}$/.test(String(externalAccountId??"")))throw Error("Phone Number ID obrigatório na Meta");
   if(provider==="whatsapp-bsp" && !String(externalAccountId??"").trim())throw Error("ID da conta no BSP obrigatório");
   return Object.freeze({
     id:String(id),tenantId:String(tenantId),provider,canal:tipo.canal,
     identity:normalizarIdentidade(tipo.canal,identity),
     secretRef:String(secretRef),externalAccountId:String(externalAccountId??"").trim(),
-    settings:Object.freeze({...settings}),
+    settings:Object.freeze({displayName:settings.displayName??"",forwardedAliases:Object.freeze(aliases),emailMarketingVerified:false}),
     status:"pending",sendEnabled:false,receiveEnabled:false,
     verifiedAt:null
   });
