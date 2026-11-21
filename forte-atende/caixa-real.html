@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>FORTE ATENDE | Caixa real em homologação</title><style>body{font-family:system-ui,sans-serif;margin:0;background:#f1f6f8;color:#123847}header{background:#123847;color:white;padding:22px}main{max-width:850px;margin:auto;padding:18px}.card{background:white;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 1px 5px #0001}input,button{padding:13px;border:1px solid #b9cbd1;border-radius:10px;font:inherit;max-width:100%;box-sizing:border-box}input{display:block;width:100%;margin:9px 0}button{background:#008c74;color:white;cursor:pointer}button:disabled{opacity:.5}small{color:#5c707a}.msg{background:#edf8f4;padding:12px;margin:9px 0;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}.error{color:#b22323}#inbox{display:none}label{display:block;margin-top:12px}</style></head><body><header><strong>FORTE ATENDE</strong><div>Caixa real • Homologação • Sem conversas fictícias</div></header><main>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>FORTE ATENDE | Caixa real em homologação</title><style>body{font-family:system-ui,sans-serif;margin:0;background:#f1f6f8;color:#123847}header{background:#123847;color:white;padding:22px}main{max-width:850px;margin:auto;padding:18px}.card{background:white;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 1px 5px #0001}input,button{padding:13px;border:1px solid #b9cbd1;border-radius:10px;font:inherit;max-width:100%;box-sizing:border-box}input{display:block;width:100%;margin:9px 0}button{background:#008c74;color:white;cursor:pointer}button:disabled{opacity:.5}small{color:#5c707a}.msg{background:#edf8f4;padding:12px;margin:9px 0;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}.error{color:#b22323}#inbox{display:none}label{display:block;margin-top:12px}textarea{display:block;width:100%;box-sizing:border-box;border:1px solid #b9cbd1;border-radius:10px;font:inherit;padding:12px;margin:9px 0}.thread{display:block;width:100%;margin:9px 0;text-align:left;background:white;color:#123847}.msg p{margin:4px 0 0}[hidden]{display:none!important}</style></head><body><header><strong>FORTE ATENDE</strong><div>Caixa de atendimento</div></header><main>
   <section id="login" class="card">
     <h2>Entrar com CPF</h2>
     <p>Use o CPF e a senha cadastrados no FORTE OPERACIONAL.</p>
@@ -12,8 +12,25 @@
     <p id="loginStatus" role="status"></p>
   </section>
   <section id="inbox">
-    <div class="card"><button id="atualizar">Atualizar mensagens</button> <button id="sair">Sair</button><p id="status" role="status"></p></div>
+    <div class="card">
+      <h2>WhatsApp</h2>
+      <button id="atualizar" type="button">Atualizar mensagens</button>
+      <button id="sair" type="button">Sair</button>
+      <p id="status" role="status"></p>
+    </div>
     <div id="conversas"></div>
+    <button id="mais" type="button" hidden>Carregar mais conversas</button>
+    <section id="conversa" class="card" hidden>
+      <button id="voltar" type="button">Voltar às conversas</button>
+      <h2 id="contato"></h2>
+      <div id="mensagens"></div>
+      <form id="resposta" hidden>
+        <label for="texto">Sua resposta</label>
+        <textarea id="texto" maxlength="4096" rows="3" required></textarea>
+        <button id="enviar" type="submit">Enviar pelo WhatsApp</button>
+      </form>
+      <p id="statusConversa" role="status"></p>
+    </section>
   </section>
 </main>
 <script type="module">
@@ -22,7 +39,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 const url = "https://gtwecfyffjszghnvtlzr.supabase.co";
 const publishableKey = "sb_publishable_RP8g0VoZdWh8e9R7Nb9mYw_GSXjSuD3";
 const db = createClient(url, publishableKey);
-const endpoint = url + "/functions/v1/forte-atende-whatsapp";
 const $ = id => document.getElementById(id);
 
 function t(tag, content) {
@@ -31,40 +47,130 @@ function t(tag, content) {
   return element;
 }
 
+async function callInbox(action, fields = {}) {
+  const { data, error } = await db.functions.invoke("order-communications", {
+    body: { action, ...fields }
+  });
+  if (!error && !data?.error) return data;
+  const response = error?.context;
+  const details = response instanceof Response ? await response.json().catch(() => null) : null;
+  throw Error(details?.error || data?.error || "Não foi possível acessar o WhatsApp. Confira a conexão.");
+}
+
+const delivery = {
+  SENDING: "Enviando", SENT: "Aceita pela Meta", DELIVERED: "Entregue", READ: "Lida",
+  FAILED: "Falha no envio", UNCERTAIN: "Envio incerto"
+};
+let selected = null;
+let offset = 0;
+let busy = false;
+let pending = null;
+
+async function exclusive(task, status) {
+  if (busy) return;
+  busy = true;
+  status.className = "";
+  for (const id of ["atualizar", "sair", "enviar", "mais", "voltar", "texto"]) $(id).disabled = true;
+  try {
+    await task();
+  } catch (error) {
+    status.textContent = error.message;
+    status.className = "error";
+  } finally {
+    for (const id of ["atualizar", "sair", "enviar", "mais", "voltar", "texto"]) $(id).disabled = false;
+    busy = false;
+  }
+}
+
+function contactName(thread) {
+  return thread.name || thread.phone || "Conversa de WhatsApp";
+}
+
+async function showList(reset = true) {
+  const list = $("conversas");
+  $("status").textContent = "Consultando WhatsApp...";
+  const page = await callInbox("INBOX_LIST", { offset: reset ? 0 : offset });
+  if (reset) {
+    selected = null;
+    $("conversa").hidden = true;
+    $("resposta").hidden = true;
+    $("mensagens").replaceChildren();
+    $("texto").value = "";
+    list.replaceChildren();
+    offset = 0;
+  }
+  list.hidden = false;
+  for (const thread of page.threads) {
+    const button = t("button", contactName(thread) + (thread.unread ? " · " + thread.unread + " nova(s)" : ""));
+    button.type = "button";
+    button.className = "thread";
+    button.onclick = () => exclusive(() => showThread(thread.id), $("status"));
+    list.append(button);
+  }
+  offset += page.threads.length;
+  $("mais").hidden = offset >= page.total;
+  $("status").textContent = page.total + (page.total === 1 ? " conversa no WhatsApp" : " conversas no WhatsApp");
+}
+
+async function showThread(threadId) {
+  const page = await callInbox("INBOX_MESSAGES", { threadId });
+  if (selected !== threadId) $("texto").value = pending?.threadId === threadId ? pending.text : "";
+  selected = threadId;
+  $("conversas").hidden = true;
+  $("mais").hidden = true;
+  $("conversa").hidden = false;
+  $("contato").textContent = contactName(page.thread);
+  const messages = $("mensagens");
+  messages.replaceChildren();
+  for (const message of page.messages) {
+    const card = t("article", "");
+    card.className = "msg";
+    const label = message.direction === "OUT" ? "Equipe" : message.direction === "NOTE" ? "Nota interna" : "Contato";
+    const date = new Date(message.at || message.receivedAt).toLocaleString("pt-BR");
+    const state = message.direction === "OUT" ? delivery[message.state] : "";
+    card.append(t("small", [label, date, state].filter(Boolean).join(" · ")),
+      t("p", message.text || (message.mediaId ? "Anexo de WhatsApp" : "Mensagem de WhatsApp")));
+    messages.append(card);
+  }
+  $("resposta").hidden = !page.canReply;
+  $("statusConversa").textContent = page.canReply ? "" : "Respostas livres ficam disponíveis por 24 horas após a última mensagem do contato.";
+}
+
 async function load() {
   const { data: { session } } = await db.auth.getSession();
   $("login").style.display = session ? "none" : "block";
   $("inbox").style.display = session ? "block" : "none";
-  $("conversas").replaceChildren();
-  if (!session) return;
-
-  const status = $("status");
-  status.className = "";
-  status.textContent = "Consultando banco...";
-  try {
-    const response = await fetch(endpoint, {
-      headers: { Authorization: "Bearer " + session.access_token, apikey: publishableKey }
-    });
-    const data = await response.json();
-    if (!response.ok) throw Error(data.error || "Erro de consulta");
-
-    for (const conversation of data.conversas || []) {
-      const card = document.createElement("article");
-      card.className = "card";
-      card.append(t("h3", conversation.identidade + " • " + conversation.canal));
-      for (const message of conversation.mensagens || []) {
-        const element = t("div", message.texto);
-        element.className = "msg";
-        card.append(element, t("small", new Date(message.recebida_em).toLocaleString("pt-BR")));
-      }
-      $("conversas").append(card);
-    }
-    status.textContent = (data.conversas || []).length + " conversa(s) reais no banco";
-  } catch (error) {
-    status.textContent = "Consulta não disponível: " + error.message;
-    status.className = "error";
-  }
+  if (session) await exclusive(() => showList(), $("status"));
 }
+
+$("resposta").addEventListener("submit", event => {
+  event.preventDefault();
+  if (!selected || busy) return;
+  const text = $("texto").value.trim();
+  if (!text) return;
+  const threadId = selected;
+  if (!pending || pending.threadId !== threadId || pending.text !== text) {
+    pending = { threadId, text, commandId: crypto.randomUUID() };
+  }
+  void exclusive(async () => {
+    $("statusConversa").textContent = "Enviando...";
+    let result;
+    try {
+      result = await callInbox("INBOX_REPLY", pending);
+    } catch (error) {
+      throw Error(error.message + " Atualize a conversa para conferir o resultado antes de tentar de novo.");
+    }
+    pending = null;
+    $("texto").value = "";
+    const state = result.message?.state;
+    const status = state === "FAILED" ? "A Meta recusou o envio." :
+      state === "UNCERTAIN" ? "Envio incerto. Atualize a conversa para conferir o resultado antes de enviar novamente." :
+      delivery[state] || "Atualize a conversa para conferir o envio.";
+    $("statusConversa").textContent = status;
+    await showThread(threadId).catch(() => {});
+    $("statusConversa").textContent = status;
+  }, $("statusConversa"));
+});
 
 $("form").addEventListener("submit", async event => {
   event.preventDefault();
@@ -109,11 +215,24 @@ $("form").addEventListener("submit", async event => {
   }
 });
 
-$("atualizar").onclick = load;
-$("sair").onclick = async () => {
-  await db.auth.signOut();
-  await load();
-};
+$("atualizar").onclick = () => exclusive(
+  () => selected ? showThread(selected) : showList(),
+  selected ? $("statusConversa") : $("status")
+);
+$("mais").onclick = () => exclusive(() => showList(false), $("status"));
+$("voltar").onclick = () => exclusive(() => showList(), $("status"));
+$("sair").onclick = () => exclusive(async () => {
+  const { error } = await db.auth.signOut();
+  if (error) throw Error("Não foi possível sair. Tente novamente.");
+  pending = selected = null;
+  $("texto").value = "";
+  $("contato").textContent = "";
+  $("status").textContent = "";
+  $("conversas").replaceChildren();
+  $("mensagens").replaceChildren();
+  $("login").style.display = "block";
+  $("inbox").style.display = "none";
+}, selected ? $("statusConversa") : $("status"));
 await load();
 </script>
 </body></html>
