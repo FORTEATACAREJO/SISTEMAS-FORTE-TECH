@@ -46,7 +46,7 @@ function messageMime(c,d) {
  */
 export function criarAdaptadores({resolveSecret,fetcher=fetch,imapSmtpTransport=null,bspTransport=null,webhookVerificado=async()=>false}={}){
  if(typeof resolveSecret!=="function")throw Error("Cofre de segredos obrigatório");
- const secrets=async c=>{const s=await resolveSecret(c.secretRef);if(!s||typeof s!=="object")throw Error("Credencial não encontrada");return s;};
+ const secrets=async c=>{const s=await resolveSecret(c.secretRef,{tenantId:c.tenantId,connectionId:c.id,provider:c.provider});if(!s||typeof s!=="object")throw Error("Credencial não encontrada");return s;};
  const authorized=async(c)=>({Authorization:"Bearer "+requireToken(await secrets(c))});
  return {
   "gmail-api":{
