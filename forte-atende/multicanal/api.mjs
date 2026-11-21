@@ -1,4 +1,5 @@
 import http from "node:http";
+import {AtendimentoCompartilhado} from "./atendimento.mjs";
 import {listarProvedores} from "./catalogo.mjs";
 import {GerenciadorPlugins} from "../plugins/gerenciador.mjs";
 
@@ -23,7 +24,7 @@ const sanitize=({secretRef,...data})=>data;
  * injeta authenticate(req) verificando a sessao de servidor (nao headers tenant).
  * Regras de negocio estao em CentralMulticanal. Nao chama listen automaticamente.
  */
-export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWebhook=null,pluginManager=null}={}){
+export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWebhook=null,pluginManager=null,atendimento=new AtendimentoCompartilhado()}={}){
  if(!central||typeof authenticate!=="function")throw Error("Autenticador de sessão obrigatório");
  const plugins=pluginManager??new GerenciadorPlugins({central});
  const origins=new Set(allowedOrigins);
@@ -48,6 +49,8 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
      if(req.headers.authorization?.startsWith("Bearer ")!==true)return response(res,401,{error:"Sessão obrigatória"});
      const actor=await authenticate(req);
      if(!actor?.tenantId||!actor?.userId||!actor?.role)return response(res,401,{error:"Sessão inválida"});
+     if(req.method==="GET"&&url.pathname==="/api/atendimento/conversas")return response(res,200,{conversas:atendimento.listar(actor),resumo:atendimento.resumo(actor)});
+     if(req.method==="GET"&&url.pathname==="/api/atendimento/resumo")return response(res,200,atendimento.resumo(actor));
      if(req.method==="GET"&&url.pathname==="/api/provedores")return response(res,200,{providers:listarProvedores()});
      if(req.method==="GET"&&url.pathname==="/api/plugins")return response(res,200,{plugins:plugins.catalogo(actor,{canal:url.searchParams.get("canal")||undefined})});
      if(req.method==="GET"&&url.pathname==="/api/conexoes")return response(res,200,{connections:central.conexoes(actor)});
@@ -55,6 +58,13 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
        return response(res,200,{messages:central.caixaEntrada(actor,{connectionId:url.searchParams.get("connectionId")||undefined,limit:Number(url.searchParams.get("limit"))||50})});
      }
      const body=req.method==="POST"?JSON.parse((await readBody(req)).toString("utf8")||"{}"):{};
+     if(req.method==="POST"&&url.pathname==="/api/atendimento/contatos")return response(res,201,{contato:atendimento.contato(actor,body)});
+     const acao=url.pathname.match(/^\\/api\\/atendimento\\/conversas\\/([^/]+)\\/(ler|assumir|resolver|responder)$/);
+     if(req.method==="POST"&&acao){
+       const id=decodeURIComponent(acao[1]);
+       const resultado=acao[2]==="ler"?atendimento.marcarLida(actor,id):acao[2]==="assumir"?atendimento.assumir(actor,id):acao[2]==="resolver"?atendimento.resolver(actor,id):atendimento.registrarResposta(actor,id,body.texto);
+       return response(res,200,{resultado});
+     }
      if(req.method==="POST"&&url.pathname==="/api/plugins/instalar")
        return response(res,201,{connection:plugins.instalar(actor,body)});
      const pluginOauth=url.pathname.match(/^\/api\/plugins\/conexoes\/([a-zA-Z0-9_-]+)\/autorizar$/);
