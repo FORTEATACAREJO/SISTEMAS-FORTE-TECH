@@ -50,7 +50,7 @@ export async function receberWebhookMeta({central,rawBody,signature,resolveSecre
     if(!connection){ignored++;continue;}
     const key=connection.tenantId+"|"+connection.id;
     if(!validado.has(key)){
-      const secret=await resolveSecret(connection.secretRef);
+      const secret=await resolveSecret(connection.secretRef,{tenantId:connection.tenantId,connectionId:connection.id,provider:connection.provider});
       if(!assinaturaMetaValida(rawBody,signature,secret?.appSecret))throw Error("Assinatura Meta inválida");
       validado.add(key);
     }
