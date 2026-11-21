@@ -108,3 +108,23 @@ A [configuração não secreta](config/canais-homologacao.json) registra os trê
 - Simulação de conversa WhatsApp, nova conversa fictícia e prévia de campanha; nenhum envio externo nem dados reais.
 - Testado em navegador Chromium (1600×900 desktop e 390×844 celular): seleção por setor, rascunho de resposta, campanhas, nova conversa e navegação responsiva, sem erros JavaScript na sequência conferida.
 - **Não confundir esta interface demonstrativa com integração de produção.** A leitura centralizada efetiva e o envio real ainda dependem de backend seguro, credenciais/autorizações e homologação.
+
+## Plugins de integração — 20/11/2026
+Catálogo extensível de plugins internos do FORTE ATENDE, com manifests separados e gerenciamento por empresa:
+- Gmail/Google Workspace: plugins/gmail/plugin.json; API Gmail com OAuth 2.0.
+- WhatsApp Business Meta Cloud API: plugins/whatsapp-business/plugin.json; Meta Developers, Phone Number ID e webhook HMAC.
+- Outlook/Microsoft 365: plugins/microsoft365/plugin.json; Entra ID e Microsoft Graph.
+- Hostinger e outros e-mails corporativos: plugins/email-imap/plugin.json; IMAP/SMTP TLS.
+- WhatsApp por BSP autorizado: plugins/whatsapp-parceiro/plugin.json; interface de extensão, precisa de implementação específica para cada parceiro.
+
+A tela integracoes.html abre a partir de painel.html. Em modo demonstrativo, mostra requisitos e formulário, mas não grava senhas nem ativa contas. Hospedeiro pode injetar window.FORTE_ATENDE_PLUGIN_CLIENT autenticado para criar conexões pendentes.
+
+API autenticada em multicanal/api.mjs:
+- GET /api/plugins: lista plugins e conexões da empresa;
+- POST /api/plugins/instalar: registra conta pendente sem tokens no navegador;
+- POST /api/plugins/conexoes/:id/autorizar: devolve URL OAuth se broker seguro estiver configurado;
+- POST /api/plugins/conexoes/:id/verificar: verifica identidade e permissões no provedor.
+
+Arquivos principais: plugins/registro.mjs, plugins/gerenciador.mjs e plugins/plugins.test.mjs.
+
+Limites: plugins INTERNOS do FORTE ATENDE, não plugins publicados no diretório do ChatGPT. Integração real depende de backend autenticado, cofre de segredos, credenciais oficiais e testes. Nenhum envio externo ou mudança no webhook compartilhado do Fiscal foi feito. WhatsApp pessoal não é compatível automaticamente com Cloud API Business.
