@@ -59,7 +59,7 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
      }
      const body=req.method==="POST"?JSON.parse((await readBody(req)).toString("utf8")||"{}"):{};
      if(req.method==="POST"&&url.pathname==="/api/atendimento/contatos")return response(res,201,{contato:atendimento.contato(actor,body)});
-     const acao=url.pathname.match(/^\\/api\\/atendimento\\/conversas\\/([^/]+)\\/(ler|assumir|resolver|responder)$/);
+     const acao=url.pathname.match(new RegExp("^/api/atendimento/conversas/([^/]+)/(ler|assumir|resolver|responder)$"));
      if(req.method==="POST"&&acao){
        const id=decodeURIComponent(acao[1]);
        const resultado=acao[2]==="ler"?atendimento.marcarLida(actor,id):acao[2]==="assumir"?atendimento.assumir(actor,id):acao[2]==="resolver"?atendimento.resolver(actor,id):atendimento.registrarResposta(actor,id,body.texto);
