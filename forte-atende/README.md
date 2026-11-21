@@ -99,3 +99,12 @@ A [configuração não secreta](config/canais-homologacao.json) registra os trê
 - Se duas caixas corporativas forem destinatárias da mesma mensagem, ou o endereço original não estiver visível, manter em **triagem humana**, sem escolher um remetente automaticamente.
 - A função de elegibilidade da identidade de resposta é apenas uma conferência local. **Não envia mensagens**, não substitui autorização de operador e não modifica configurações das contas Hostinger.
 - O workflow de testes incluiu os cenários de roteamento, além das validações das campanhas e dos canais.
+
+## Prévia interativa de três contas — 20/11/2026
+- [Painel HTML](painel.html): arquivo autocontido com ícone aprovado incorporado e aparência mais vibrante.
+- Visual desktop 50% E-mails/50% WhatsApp; mobile alterna abas e abre detalhes sem rolagem horizontal.
+- Filtros funcionais por `Gerência`, `Contato` e `Orçamentos`; cada conversa fictícia indica a caixa de destino.
+- Ao preparar uma resposta, o formulário sugere o mesmo remetente; as identidades Gerência e Orçamentos exibem aviso de que o envio independente ainda não foi validado. Todas as respostas são apenas rascunhos locais.
+- Simulação de conversa WhatsApp, nova conversa fictícia e prévia de campanha; nenhum envio externo nem dados reais.
+- Testado em navegador Chromium (1600×900 desktop e 390×844 celular): seleção por setor, rascunho de resposta, campanhas, nova conversa e navegação responsiva, sem erros JavaScript na sequência conferida.
+- **Não confundir esta interface demonstrativa com integração de produção.** A leitura centralizada efetiva e o envio real ainda dependem de backend seguro, credenciais/autorizações e homologação.
