@@ -27,7 +27,6 @@ function requireToken(secret){
 function accessAllowed(provider,connection){if(connection.provider!==provider)throw Error("Adaptador vinculado a outra conta");}
 function messageMime(c,d) {
  const from=noHeaderBreak(c.identity),to=noHeaderBreak(d.to);
- const subject=base64url(d.subject); // base64url nao serve em cabeçalho RFC 2047; usar base64 normal abaixo
  const header=[
   "From: <"+from+">","To: <"+to+">",
   "Subject: =?UTF-8?B?"+Buffer.from(d.subject,"utf8").toString("base64")+"?=",
