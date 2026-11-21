@@ -76,7 +76,7 @@ export class CentralMulticanal {
     this.store.updateConnection(next);
     return {id:next.id,status:next.status,sendEnabled:next.sendEnabled,receiveEnabled:next.receiveEnabled};
   }
-  mensagemRecebida({tenantId,connectionId,externalId,from,to,text,receivedAt}){
+  mensagemRecebida({tenantId,connectionId,externalId,from,to,text,receivedAt,originalRecipient=null}){
     // Exclusivo do backend autenticado/webhook com assinatura verificada. Nunca expor diretamente ao cliente.
     const c=this.store.getConnection(tenantId,connectionId);
     if(!c||c.status!=="verified"||!c.receiveEnabled)throw Error("Conexão de recebimento não verificada");
@@ -85,9 +85,29 @@ export class CentralMulticanal {
     const recipient=normalizarIdentidade(c.canal,to);
     if(recipient!==c.identity)throw Error("Mensagem destinada a outra conta");
     const m={id:randomUUID(),tenantId,connectionId,canal:c.canal,externalId:externalId.trim(),
-      from:sender,to:recipient,text:typeof text==="string"?text.slice(0,50000):"",
+      from:sender,to:recipient,originalRecipient:originalRecipient?String(originalRecipient).slice(0,254):null,
+      text:typeof text==="string"?text.slice(0,50000):"",
       receivedAt:receivedAt||this.clock().toISOString()};
     return this.store.addInbound(m);
+  }
+  async sincronizarCaixa(actor,connectionId,{max=20}={}){
+    autorizar(actor,"consulta");
+    const c=this.store.getConnection(actor.tenantId,connectionId);
+    if(!c||c.canal!=="email"||c.status!=="verified"||!c.receiveEnabled)throw Error("Caixa não autorizada para leitura");
+    const adapter=this.adapters[c.provider];
+    if(typeof adapter?.list!=="function")throw Error("Provedor sem leitura implementada");
+    const entries=await adapter.list(c,{max:Math.max(1,Math.min(Number(max)||20,50))});
+    if(!Array.isArray(entries))throw Error("Resposta inválida da caixa postal");
+    let added=0,duplicates=0,ignored=0;
+    for(const e of entries.slice(0,50)){
+      try{
+        const inbox=this.mensagemRecebida({tenantId:c.tenantId,connectionId:c.id,
+          externalId:String(e.externalId??""),from:e.from,to:c.identity,
+          originalRecipient:String(e.to??""),text:String(e.text??""),receivedAt:e.receivedAt});
+        if(inbox.duplicate)duplicates++;else added++;
+      }catch{ignored++;}
+    }
+    return {added,duplicates,ignored};
   }
   caixaEntrada(actor,filters={}){
     autorizar(actor,"consulta");
