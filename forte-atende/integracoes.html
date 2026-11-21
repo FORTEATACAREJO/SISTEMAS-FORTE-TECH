@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#15334a">
+<title>FORTE ATENDE — Plugins e integrações</title>
+<style>
+:root{--navy:#14324b;--deep:#10283d;--teal:#047c79;--green:#17a572;--cyan:#26b8cd;--orange:#f4a52f;--ink:#173044;--muted:#657d8b;--line:#dce6ee;--bg:#f1f6f8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px/1.48 system-ui,-apple-system,Segoe UI,Arial;color:var(--ink)}
+header{background:linear-gradient(110deg,#112a42,#075d73 55%,#0c956c);color:white;box-shadow:0 5px 16px #10324824}
+nav{max-width:1240px;margin:auto;display:flex;align-items:center;justify-content:space-between;padding:19px 20px;gap:18px}
+.brand{font-weight:850;font-size:21px;letter-spacing:-.5px}.brand small{display:block;font-size:11px;font-weight:600;color:#c2e8e7;letter-spacing:1px}
+.back{color:#fff;border:1px solid #ffffff50;border-radius:9px;text-decoration:none;padding:8px 13px;background:#ffffff1b;font-weight:700}
+main{max-width:1240px;margin:0 auto;padding:24px 20px 60px}
+h1{margin:0;font-size:27px;letter-spacing:-.6px}h2{margin:0;font-size:20px}p{margin:7px 0 0}.muted{color:var(--muted)}
+.titlebar{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:17px}
+.notice{border:1px solid #f0ce83;background:#fff9e8;border-radius:11px;padding:13px 16px;color:#6e5423;margin-bottom:20px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 23px}
+.tab{border:1px solid #bfd3dd;background:white;padding:9px 15px;border-radius:24px;font-weight:700;color:var(--ink);cursor:pointer}
+.tab[aria-pressed=true]{background:var(--deep);color:white;border-color:var(--deep)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+.plugin{border:1px solid var(--line);background:white;border-radius:16px;padding:20px;box-shadow:0 6px 23px #14324b0d;display:flex;flex-direction:column;gap:11px}
+.plugin .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.symbol{font-size:28px;width:53px;height:53px;border-radius:15px;display:grid;place-items:center;color:#fff;background:linear-gradient(120deg,#066b78,#24ae87)}
+.plugin[data-id="whatsapp-business"] .symbol,.plugin[data-id="whatsapp-parceiro"] .symbol{background:linear-gradient(120deg,#048361,#31c16a)}
+.plugin[data-id="microsoft365"] .symbol{background:linear-gradient(120deg,#1460a8,#4aa8ee)}
+.plugin[data-id="email-imap"] .symbol{background:linear-gradient(120deg,#bf6520,#f4a52f)}
+.label{font-weight:800;font-size:17px;line-height:1.25}.family{color:var(--muted);font-size:12px;margin-top:3px}
+.tag{font-size:11px;font-weight:800;color:#146d63;background:#e5f7f0;padding:4px 9px;border-radius:18px;white-space:nowrap}
+.tag.warn{background:#fff0d9;color:#905b12}
+.description{font-size:13px;color:var(--muted);min-height:55px}
+.features{display:flex;gap:5px;flex-wrap:wrap;min-height:28px}
+.feature{border-radius:6px;background:#f0f5f8;color:#446071;font-size:11px;padding:4px 7px}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:auto;padding-top:4px}
+button{font:inherit;cursor:pointer;border:0;border-radius:9px;padding:9px 12px;font-weight:750}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+.primary{background:var(--teal);color:white}
+.secondary{background:#eaf2f5;color:#1f5167}
+button:disabled{opacity:.5;cursor:not-allowed}
+.summary{font-size:13px;color:var(--muted);margin-top:8px}
+.overlay{display:none;position:fixed;inset:0;z-index:10;background:#07283b8a;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.dialog{width:min(520px,100%);border-radius:18px;background:#fff;box-shadow:0 20px 70px #091b2b55;padding:24px;max-height:92vh;overflow:auto}
+.dialog h2{padding-right:25px}.dismiss{float:right;background:#ebf2f6;color:#243a4b}
+.dialog .requirements{background:#eff7f7;border-radius:11px;padding:11px 16px;margin:16px 0}
+.dialog ul{padding-left:20px;margin:7px 0}.dialog li{margin:6px 0}
+input{width:100%;padding:11px;border:1px solid #b9cbd5;border-radius:8px}
+label{font-weight:700;display:block;margin:15px 0 6px}
+.status{margin-top:12px;border-radius:8px;padding:10px;background:#f0f4f6;color:#435d6a;font-size:13px}
+footer{margin-top:22px;color:#758a95;font-size:12px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.grid{grid-template-columns:1fr}nav{padding:14px}.brand{font-size:19px}main{padding:17px 14px 35px}h1{font-size:23px}.plugin{padding:16px}.titlebar{align-items:flex-start}}
+</style></head><body>
+<header><nav><div class="brand">FORTE ATENDE<small>PLUGINS & INTEGRAÇÕES</small></div><a class="back" href="./painel.html">← Voltar ao painel</a></nav></header>
+<main><div class="titlebar"><div><h1>Conectar canais e aplicativos</h1><p class="muted">Adicione quantas contas forem necessárias, com dados separados por empresa.</p></div><span class="tag warn" id="generalStatus">Ambiente de homologação</span></div>
+<div class="notice"><strong>Conexões protegidas:</strong> as contas precisam ser autorizadas pelo titular e verificadas no servidor. Esta visualização não recolhe senhas, códigos OAuth ou tokens. Sem backend autenticado, serve como prévia de instalação dos plugins.</div>
+<div class="tabs" role="group" aria-label="Filtrar plugins"><button class="tab" data-filter="all" aria-pressed="true">Todos</button><button class="tab" data-filter="email" aria-pressed="false">E-mails</button><button class="tab" data-filter="whatsapp" aria-pressed="false">WhatsApp Business</button></div>
+<div class="grid" id="plugins"></div><p class="summary" id="count"></p>
+<footer>Conectores oficiais e protocolos autorizados • Sem envio automático de mensagens • LGPD e isolamento por empresa</footer>
+</main>
+<div class="overlay" id="overlay" role="presentation"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+<button class="dismiss" id="close" aria-label="Fechar">✕</button><h2 id="dialogTitle"></h2><p id="dialogDesc" class="muted"></p>
+<div class="requirements"><strong>Para ativar:</strong><ul id="needs"></ul></div>
+<form id="installForm"><label for="identity" id="identityLabel">Endereço ou número autorizado</label><input id="identity" name="identity" required autocomplete="off" placeholder="">
+<div id="phoneIdContainer" hidden><label for="phoneId">Phone Number ID da Meta</label><input id="phoneId" inputmode="numeric" pattern="[0-9]{8,32}" placeholder="Identificador da Meta"></div>
+<div class="status" id="dialogStatus" aria-live="polite">Esta conexão será criada inicialmente como pendente. Nenhuma mensagem será enviada.</div>
+<div class="actions"><button class="primary" id="install" type="submit">Preparar conexão</button><button type="button" class="secondary" id="cancel">Cancelar</button></div></form>
+</div></div>
+<script>
+(()=>{
+'use strict';
+const PLUGINS=[
+{id:'gmail',name:'Gmail / Google Workspace',provider:'gmail-api',channel:'email',icon:'✉',family:'Google',auth:'oauth2',features:['Receber','Responder','Enviar','Pesquisar'],details:'Gmail e contas profissionais Google Workspace com autorização OAuth.',needs:['Projeto OAuth no Google Cloud','Escopos autorizados para leitura e envio','Token guardado no servidor','Conferir consentimento e permissões']},
+{id:'whatsapp-business',name:'WhatsApp Business — Meta',provider:'whatsapp-cloud',channel:'whatsapp',icon:'◉',family:'Meta Cloud API',auth:'meta-business',features:['Receber','Responder','Enviar','Templates'],details:'Conexão oficial para números Business autorizados na Meta Developers.',needs:['Conta Meta Business verificada','Phone Number ID do número','API oficial e token seguro no servidor','Webhook assinado e templates homologados']},
+{id:'microsoft365',name:'Outlook / Microsoft 365',provider:'microsoft-graph',channel:'email',icon:'▣',family:'Microsoft Graph',auth:'oauth2',features:['Receber','Responder','Enviar'],details:'Caixas Microsoft 365 e Outlook com autorização Microsoft Entra ID.',needs:['Aplicativo autorizado no Microsoft Entra','Escopos Mail.Read e Mail.Send','Token guardado no servidor']},
+{id:'email-imap',name:'E-mail corporativo',provider:'imap-smtp',channel:'email',icon:'▤',family:'Hostinger e IMAP/SMTP',auth:'servidor-tls',features:['Receber','Responder','Enviar'],details:'Hostinger, Zoho e outros provedores compatíveis com IMAP/SMTP TLS.',needs:['Servidor IMAP/SMTP com TLS','Credenciais cadastradas no cofre do servidor','Remetente de envio autorizado']},
+{id:'whatsapp-parceiro',name:'WhatsApp por parceiro oficial',provider:'whatsapp-bsp',channel:'whatsapp',icon:'▦',family:'BSP oficial',auth:'provedor-autorizado',features:['Receber','Responder','Enviar'],details:'Ponto de extensão para empresas que utilizem BSPs oficiais do WhatsApp.',needs:['Escolher parceiro oficial','Habilitar adaptador específico da API','Validar número e webhook autorizado'],notReady:true}
+];
+const $=id=>document.getElementById(id);let active=null,filter='all';
+const client=window.FORTE_ATENDE_PLUGIN_CLIENT??null;
+function close(){ $('overlay').classList.remove('open');$('installForm').reset();active=null; }
+function open(id){
+ active=PLUGINS.find(x=>x.id===id);if(!active)return;
+ $('dialogTitle').textContent=active.name;
+ $('dialogDesc').textContent=active.details;
+ $('needs').replaceChildren(...active.needs.map(x=>{const li=document.createElement('li');li.textContent=x;return li;}));
+ $('identityLabel').textContent=active.channel==='whatsapp'?'Número WhatsApp Business (+55...)':'E-mail da conta a conectar';
+ $('identity').placeholder=active.channel==='whatsapp'?'+5564999172700':'usuario@empresa.com.br';
+ $('phoneIdContainer').hidden=active.id!=='whatsapp-business';
+ $('phoneId').required=active.id==='whatsapp-business';
+ $('install').disabled=Boolean(active.notReady);
+ $('dialogStatus').textContent=active.notReady?'Este parceiro precisa de um adaptador específico antes da instalação.':
+   client?'A conexão será cadastrada como pendente e precisará de autorização no servidor.':
+   'Prévia apenas: o backend de instalação ainda não está publicado. Não insira senhas nem tokens.';
+ $('overlay').classList.add('open');$('identity').focus();
+}
+function render(){
+ $('plugins').replaceChildren();
+ const filtered=PLUGINS.filter(p=>filter==='all'||p.channel===filter);
+ for(const p of filtered){
+   const card=document.createElement('article');card.className='plugin';card.dataset.id=p.id;
+   const top=document.createElement('div');top.className='top';
+   const symbol=document.createElement('div');symbol.className='symbol';symbol.textContent=p.icon;
+   const badge=document.createElement('span');badge.className='tag'+(p.notReady?' warn':'');badge.textContent=p.notReady?'Extensão preparada':'Plugin programado';
+   top.append(symbol,badge);
+   const head=document.createElement('div');head.className='label';head.textContent=p.name;
+   const family=document.createElement('div');family.className='family';family.textContent=p.family;
+   const description=document.createElement('div');description.className='description';description.textContent=p.details;
+   const features=document.createElement('div');features.className='features';
+   p.features.forEach(t=>{const chip=document.createElement('span');chip.className='feature';chip.textContent=t;features.append(chip);});
+   const actions=document.createElement('div');actions.className='actions';
+   const btn=document.createElement('button');btn.className='primary';btn.textContent=p.notReady?'Ver requisitos':'Configurar';btn.addEventListener('click',()=>open(p.id));
+   actions.append(btn);card.append(top,head,family,description,features,actions);$('plugins').append(card);
+ }
+ $('count').textContent=filtered.length+' plugin(s) disponíveis no catálogo. O funcionamento real depende de configurar cada conta.';
+}
+for(const tab of document.querySelectorAll('[data-filter]'))tab.addEventListener('click',()=>{
+ filter=tab.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.filter===filter)));render();
+});
+$('close').onclick=close;$('cancel').onclick=close;
+$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))close();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+$('installForm').addEventListener('submit',async e=>{
+ e.preventDefault();if(!active||active.notReady)return;
+ const identity=$('identity').value.trim(),externalAccountId=active.id==='whatsapp-business'?$('phoneId').value.trim():'';
+ if(!client||typeof client.installPlugin!=='function'){
+   $('dialogStatus').textContent='Configuração demonstrativa: para instalar de verdade, publique a API autenticada do FORTE ATENDE e autorize esta conexão no servidor.';
+   return;
+ }
+ $('install').disabled=true;$('dialogStatus').textContent='Cadastrando conexão pendente…';
+ try{
+   const res=await client.installPlugin({pluginId:active.id,identity,externalAccountId});
+   const id=res?.connection?.id??res?.id??'';
+   $('dialogStatus').textContent=id?'Conexão pendente criada. Próximo passo: autorização oficial da conta ('+id+').':
+     'Solicitação recebida. Valide o status no servidor antes de operar.';
+ }catch{ $('dialogStatus').textContent='Não foi possível registrar a conexão. Revise a autorização no servidor.'; }
+ finally{$('install').disabled=false;}
+});
+render();
+})();
+</script></body></html>
