@@ -110,9 +110,25 @@ test("WhatsApp exige janela de atendimento ou template; marketing exige tipo cor
  assert.equal(campaign.kind,"campaign");
 });
 function webhookFixture(phoneId="1278417945364665"){
- return Buffer.from(JSON.stringify({object:"whatsapp_business_account",entry:[{changes:[{field:"messages",value:{
-  metadata:{phone_number_id:phoneId},messages:[{id:"wamid.test-99",from:"5534999993333",type:"text",text:{body:"Olá"},timestamp:"1795179600"}]
- }}]}]}]));
+ const event={
+   object:"whatsapp_business_account",
+   entry:[{
+     changes:[{
+       field:"messages",
+       value:{
+         metadata:{phone_number_id:phoneId},
+         messages:[{
+           id:"wamid.test-99",
+           from:"5534999993333",
+           type:"text",
+           text:{body:"Olá"},
+           timestamp:"1795179600"
+         }]
+       }
+     }]
+   }]
+ };
+ return Buffer.from(JSON.stringify(event));
 }
 test("webhook verifica HMAC, registra por numero e nao duplica",async()=>{
  const s=setup();
