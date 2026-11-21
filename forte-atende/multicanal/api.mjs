@@ -1,5 +1,6 @@
 import http from "node:http";
 import {listarProvedores} from "./catalogo.mjs";
+import {GerenciadorPlugins} from "../plugins/gerenciador.mjs";
 
 const MAX_JSON=64*1024;
 const response=(res,status,data)=>{
@@ -22,8 +23,9 @@ const sanitize=({secretRef,...data})=>data;
  * injeta authenticate(req) verificando a sessao de servidor (nao headers tenant).
  * Regras de negocio estao em CentralMulticanal. Nao chama listen automaticamente.
  */
-export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWebhook=null}={}){
+export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWebhook=null,pluginManager=null}={}){
  if(!central||typeof authenticate!=="function")throw Error("Autenticador de sessão obrigatório");
+ const plugins=pluginManager??new GerenciadorPlugins({central});
  const origins=new Set(allowedOrigins);
  return http.createServer(async(req,res)=>{
    try{
@@ -47,11 +49,20 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
      const actor=await authenticate(req);
      if(!actor?.tenantId||!actor?.userId||!actor?.role)return response(res,401,{error:"Sessão inválida"});
      if(req.method==="GET"&&url.pathname==="/api/provedores")return response(res,200,{providers:listarProvedores()});
+     if(req.method==="GET"&&url.pathname==="/api/plugins")return response(res,200,{plugins:plugins.catalogo(actor,{canal:url.searchParams.get("canal")||undefined})});
      if(req.method==="GET"&&url.pathname==="/api/conexoes")return response(res,200,{connections:central.conexoes(actor)});
      if(req.method==="GET"&&url.pathname==="/api/mensagens"){
        return response(res,200,{messages:central.caixaEntrada(actor,{connectionId:url.searchParams.get("connectionId")||undefined,limit:Number(url.searchParams.get("limit"))||50})});
      }
      const body=req.method==="POST"?JSON.parse((await readBody(req)).toString("utf8")||"{}"):{};
+     if(req.method==="POST"&&url.pathname==="/api/plugins/instalar")
+       return response(res,201,{connection:plugins.instalar(actor,body)});
+     const pluginOauth=url.pathname.match(/^\/api\/plugins\/conexoes\/([a-zA-Z0-9_-]+)\/autorizar$/);
+     if(req.method==="POST"&&pluginOauth)
+       return response(res,200,{authorization:await plugins.prepararAutorizacao(actor,pluginOauth[1])});
+     const pluginVerify=url.pathname.match(/^\/api\/plugins\/conexoes\/([a-zA-Z0-9_-]+)\/verificar$/);
+     if(req.method==="POST"&&pluginVerify)
+       return response(res,200,{connection:await plugins.verificar(actor,pluginVerify[1],body)});
      if(req.method==="POST"&&url.pathname==="/api/conexoes")
        return response(res,201,{connection:sanitize(central.registrar(actor,body))});
      const verify=url.pathname.match(/^\/api\/conexoes\/([a-zA-Z0-9_-]+)\/verificar$/);
