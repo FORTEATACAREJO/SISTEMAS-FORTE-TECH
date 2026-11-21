@@ -42,3 +42,16 @@ test("PWA somente pode ser liberado com manifesto e icones fisicos",()=>{
   assert.ok(existsSync(join(root,icon.src)),"arquivo de icone nao existe: "+icon.src);
  }
 });
+
+test("painel vincula manifesto e registra service worker apenas em HTTPS",()=>{
+ const html=readFileSync(join(root,"painel.html"),"utf8");
+ assert.match(html,/<link rel="manifest" href="\.\/manifest\.webmanifest">/);
+ assert.match(html,/navigator\.serviceWorker\.register\('\.\/service-worker\.js'\)/);
+ assert.match(html,/location\.protocol === 'https:'/);
+});
+test("service worker nao armazena chamadas autenticadas nem API",()=>{
+ const sw=readFileSync(join(root,"service-worker.js"),"utf8");
+ assert.match(sw,/req\.headers\.has\("authorization"\)/);
+ assert.match(sw,/url\.pathname\.includes\("\/api\/"\)/);
+ assert.doesNotMatch(sw,/cache\.put\(/);
+});
