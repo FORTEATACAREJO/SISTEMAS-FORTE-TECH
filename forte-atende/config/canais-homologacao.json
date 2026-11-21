@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "application": "FORTE ATENDE",
+  "channel_configuration": "homologacao",
+  "whatsapp": {
+    "phone_e164": "+5564999172700",
+    "display": "+55 (64) 99917-2700",
+    "meta_app": "FORTE ATACAREJO APP",
+    "waba_id": "1081614524680450",
+    "phone_number_id": "1278417945364665",
+    "identity_source": "identificadores anteriores da Forte, pendentes de confirmação na sessão Meta atual",
+    "gateway": "https://forte-whatsapp-api.onrender.com/webhook",
+    "existing_gateway_reuse": true,
+    "do_not_override_shared_webhook": true,
+    "has_direct_meta_developers_access": false,
+    "outbound_messages_enabled": false,
+    "promotional_campaigns_enabled": false,
+    "connection_status": "pendente_validacao_em_tempo_real"
+  },
+  "email": {
+    "mailbox_label": "E-mails",
+    "provider": "Hostinger Mail",
+    "primary": "contato@forteatacarejo.com.br",
+    "mailboxes": [
+      {
+        "unit": "gerencia",
+        "display": "Gerência",
+        "address": "gerencia@forteatacarejo.com.br",
+        "forward_to": "entradasforteatacarejo@gmail.com",
+        "forwarding_test_received_on": "2026-11-20",
+        "direct_hostinger_access_verified": false,
+        "send_as_verified": false
+      },
+      {
+        "unit": "contato",
+        "display": "Contato",
+        "address": "contato@forteatacarejo.com.br",
+        "forward_to": "entradasforteatacarejo@gmail.com",
+        "forwarding_test_received_on": "2026-11-20",
+        "direct_hostinger_access_verified": true,
+        "send_as_verified": true
+      },
+      {
+        "unit": "orcamentos",
+        "display": "Orçamentos",
+        "address": "orcamentos@forteatacarejo.com.br",
+        "forward_to": "entradasforteatacarejo@gmail.com",
+        "forwarding_test_received_on": "2026-11-20",
+        "direct_hostinger_access_verified": false,
+        "send_as_verified": false
+      }
+    ],
+    "central_inbox": "entradasforteatacarejo@gmail.com",
+    "central_inbox_provider": "Gmail",
+    "central_inbox_connected": true,
+    "forwarding_status": "recebimento_dos_tres_testes_confirmado_em_2026_11_20",
+    "sending_identity_rule": "responder_pelo_endereco_original_somente_se_identidade_hostinger_autorizada_e_verificada; caso contrario, rascunho_pendente_revisao",
+    "example_not_mailbox": "emails@forteatacarejo.com.br",
+    "promotions_outbound_enabled": false
+  },
+  "gmail": {
+    "archive": "entradasforteatacarejo@gmail.com",
+    "usage": "caixa unificada de recebimento e arquivo para gerencia, contato e orcamentos; preservar destinatario original em cada conversa",
+    "connected": true
+  },
+  "safeguards": {
+    "send_real_message": false,
+    "do_not_store_tokens_in_git": true,
+    "do_not_change_fiscal_webhook": true,
+    "do_not_route_messages_to_unapproved_recipient": true,
+    "require_opt_in_and_approved_templates_for_marketing": true
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "forte-atende-plugin/v1",
+  "id": "whatsapp-parceiro",
+  "name": "WhatsApp parceiro oficial BSP",
+  "version": "0.1.0",
+  "provider": "whatsapp-bsp",
+  "channel": "whatsapp",
+  "authentication": "bsp_official",
+  "requested_permissions": [],
+  "capabilities": [
+    "receive",
+    "reply",
+    "send",
+    "templates"
+  ],
+  "status": "adapter_interface_only",
+  "credentials_policy": "vault_only",
+  "enabled_by_default": false,
+  "real_account_connected": false,
+  "require_provider_verification": true,
+  "tenant_isolation": true,
+  "notes": "Contrato de adaptador, requer implementar e homologar cada BSP antes de habilitar."
+}

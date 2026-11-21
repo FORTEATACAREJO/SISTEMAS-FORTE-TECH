@@ -1,0 +1,19 @@
+name: Testes FORTE ATENDE Campanhas
+on:
+  pull_request:
+    paths:
+      - "forte-atende/**"
+      - ".github/workflows/forte-atende-campanhas.yml"
+  workflow_dispatch:
+jobs:
+  campanhas:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Testar preparacao de campanhas
+        run: node --test forte-atende/campanhas/core.test.mjs forte-atende/config/canais.test.mjs forte-atende/email/roteamento.test.mjs forte-atende/multicanal/multicanal.test.mjs forte-atende/multicanal/api.test.mjs forte-atende/plugins/plugins.test.mjs
