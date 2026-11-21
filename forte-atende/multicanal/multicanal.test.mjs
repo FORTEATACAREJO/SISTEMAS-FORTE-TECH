@@ -215,3 +215,34 @@ test("IMAP SMTP serve qualquer caixa com TLS, identidade de envio verificada e s
  await assert.rejects(()=>driver.send(c,{...secret,verifiedSender:"qualquer@example.com"},{to:"cliente@example.com",subject:"Oi",text:"Teste"}),/não verificada/);
  await assert.rejects(()=>driver.list(c,{...secret,imap:{...secret.imap,port:143}}),/TLS/);
 });
+
+test("envio promocional exige prova de opt-in e template aprovados no backend",async()=>{
+ const s=setup();
+ s.registrar(admin(),{id:"wa002",provider:"whatsapp-cloud",identity:"+5564999172700",
+   externalAccountId:"1278417945364665",secretRef:"vault/wa002"});
+ await s.validar(admin(),"wa002",{permitirEnvio:true,permitirRecebimento:true});
+ const draft=s.rascunho(admin(),{connectionId:"wa002",to:"+5564999993333",text:"Oferta de cimento",
+   kind:"campaign",consent:true,consentReference:"consent-record-1",
+   template:{name:"oferta_aprovada",category:"MARKETING"}});
+ s.aprovar(admin(),draft.id);
+ await assert.rejects(()=>s.enviarAprovado(admin(),draft.id),/Consentimento/);
+ assert.equal(s.store.getDraft("empresa1",draft.id).status,"approved");
+ s.consentVerifier=async()=>true;
+ await assert.rejects(()=>s.enviarAprovado(admin(),draft.id),/Template WhatsApp/);
+ s.templateVerifier=async()=>true;
+ const result=await s.enviarAprovado(admin(),draft.id);
+ assert.equal(result.status,"sent");
+ assert.equal(result.externalId,"wamid.001");
+});
+test("provedor que apenas aceitou SMTP/Graph nao significa entrega confirmada",async()=>{
+ const s=new CentralMulticanal({adapters:{"gmail-api":{
+   verify:async c=>({authenticated:true,identity:c.identity,canSend:true,canReceive:true}),
+   send:async()=>({externalId:"accepted-id",acceptedOnly:true})
+ }}});
+ s.registrar(admin(),{id:"email777",provider:"gmail-api",identity:"contato@example.com",secretRef:"vault/777"});
+ await s.validar(admin(),"email777",{permitirEnvio:true});
+ const draft=s.rascunho(admin(),{connectionId:"email777",to:"cliente@example.com",subject:"Olá",text:"Oi"});
+ s.aprovar(admin(),draft.id);
+ const r=await s.enviarAprovado(admin(),draft.id);
+ assert.equal(r.status,"accepted");
+});
