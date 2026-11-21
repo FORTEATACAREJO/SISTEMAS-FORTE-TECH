@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>FORTE ATENDE | Caixa real em homologação</title><style>body{font-family:system-ui,sans-serif;margin:0;background:#f1f6f8;color:#123847}header{background:#123847;color:white;padding:22px}main{max-width:850px;margin:auto;padding:18px}.card{background:white;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 1px 5px #0001}input,button{padding:13px;border:1px solid #b9cbd1;border-radius:10px;font:inherit;max-width:100%;box-sizing:border-box}input{display:block;width:100%;margin:9px 0}button{background:#008c74;color:white;cursor:pointer}button:disabled{opacity:.5}small{color:#5c707a}.msg{background:#edf8f4;padding:12px;margin:9px 0;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}.error{color:#b22323}#inbox{display:none}label{display:block;margin-top:12px}textarea{display:block;width:100%;box-sizing:border-box;border:1px solid #b9cbd1;border-radius:10px;font:inherit;padding:12px;margin:9px 0}.thread{display:block;width:100%;margin:9px 0;text-align:left;background:white;color:#123847}.msg p{margin:4px 0 0}[hidden]{display:none!important}</style></head><body><header><strong>FORTE ATENDE</strong><div>Caixa de atendimento</div></header><main>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>FORTE ATENDE | Caixa real em homologação</title><style>body{font-family:system-ui,sans-serif;margin:0;background:#f1f6f8;color:#123847}header{background:#123847;color:white;padding:22px}main{max-width:850px;margin:auto;padding:18px}.card{background:white;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 1px 5px #0001}input,button{padding:13px;border:1px solid #b9cbd1;border-radius:10px;font:inherit;max-width:100%;box-sizing:border-box}input{display:block;width:100%;margin:9px 0}button{background:#008c74;color:white;cursor:pointer}button:disabled{opacity:.5}small{color:#5c707a}.msg{background:#edf8f4;padding:12px;margin:9px 0;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}.error{color:#b22323}#inbox{display:none}label{display:block;margin-top:12px}textarea{display:block;width:100%;box-sizing:border-box;border:1px solid #b9cbd1;border-radius:10px;font:inherit;padding:12px;margin:9px 0}.thread{display:block;width:100%;margin:9px 0;text-align:left;background:white;color:#123847}.msg p{margin:4px 0 0}[hidden]{display:none!important}summary{cursor:pointer;font-weight:600;margin-bottom:12px}</style></head><body><header><strong>FORTE ATENDE</strong><div>Caixa de atendimento</div></header><main>
   <section id="login" class="card">
     <h2>Entrar com CPF</h2>
     <p>Use o CPF e a senha cadastrados no FORTE OPERACIONAL.</p>
@@ -18,6 +18,25 @@
       <button id="sair" type="button">Sair</button>
       <p id="status" role="status"></p>
     </div>
+    <details id="email" class="card">
+      <summary>E-mail · Contato</summary>
+      <button id="emailAtualizar" type="button">Atualizar e-mails</button>
+      <p id="emailStatus" role="status"></p>
+      <div id="emailLista"></div>
+      <button id="emailMais" type="button" hidden>Próximos e-mails</button>
+      <section id="emailMensagem" hidden>
+        <button id="emailVoltar" type="button">Voltar aos e-mails</button>
+        <h3 id="emailAssunto"></h3>
+        <p id="emailDe"></p>
+        <p id="emailTexto" class="msg"></p>
+        <small id="emailAnexos"></small>
+        <form id="emailResposta">
+          <label for="emailRascunho">Responder ao remetente</label>
+          <textarea id="emailRascunho" maxlength="10000" rows="3" required></textarea>
+          <button id="emailEnviar" type="submit">Enviar pela Hostinger</button>
+        </form>
+      </section>
+    </details>
     <div id="conversas"></div>
     <button id="mais" type="button" hidden>Carregar mais conversas</button>
     <section id="conversa" class="card" hidden>
@@ -70,14 +89,14 @@ async function exclusive(task, status) {
   if (busy) return;
   busy = true;
   status.className = "";
-  for (const id of ["atualizar", "sair", "enviar", "mais", "voltar", "texto"]) $(id).disabled = true;
+  for (const id of ["atualizar", "sair", "enviar", "mais", "voltar", "texto", "emailEnviar", "emailRascunho", "emailAtualizar", "emailMais", "emailVoltar"]) $(id).disabled = true;
   try {
     await task();
   } catch (error) {
     status.textContent = error.message;
     status.className = "error";
   } finally {
-    for (const id of ["atualizar", "sair", "enviar", "mais", "voltar", "texto"]) $(id).disabled = false;
+    for (const id of ["atualizar", "sair", "enviar", "mais", "voltar", "texto", "emailEnviar", "emailRascunho", "emailAtualizar", "emailMais", "emailVoltar"]) $(id).disabled = false;
     busy = false;
   }
 }
@@ -215,6 +234,95 @@ $("form").addEventListener("submit", async event => {
   }
 });
 
+let emailMessage = null;
+let emailPending = null;
+let emailPage = 1;
+
+function clearEmailMessage() {
+  emailMessage = null;
+  $("emailMensagem").hidden = true;
+  $("emailAssunto").textContent = "";
+  $("emailDe").textContent = "";
+  $("emailTexto").textContent = "";
+  $("emailAnexos").textContent = "";
+  $("emailRascunho").value = "";
+}
+
+async function callEmail(action, fields = {}) {
+  const { data, error } = await db.functions.invoke("forte-atende-email", {
+    body: { action, ...fields }
+  });
+  if (!error) return data;
+  const details = error.context instanceof Response ? await error.context.json().catch(() => null) : null;
+  throw Error(details?.error || "Não foi possível consultar a Hostinger.");
+}
+
+async function listEmail(page = 1) {
+  $("emailStatus").textContent = "Consultando a Hostinger...";
+  const data = await callEmail("LIST", { page });
+  const list = $("emailLista");
+  if (page === 1) list.replaceChildren();
+  clearEmailMessage();
+  list.hidden = false;
+  for (const message of data.messages) {
+    const button = t("button", (message.subject || "(Sem assunto)") + " · " + message.from);
+    button.type = "button";
+    button.className = "thread";
+    button.onclick = () => exclusive(() => openEmail(message.uid), $("emailStatus"));
+    list.append(button);
+  }
+  emailPage = page;
+  $("emailMais").hidden = list.children.length >= Number(data.total || 0);
+  $("emailStatus").textContent = data.address + " · " + data.total + " e-mail(s) na caixa de entrada";
+}
+
+async function openEmail(uid) {
+  const message = await callEmail("OPEN", { uid });
+  emailMessage = message;
+  $("emailLista").hidden = true;
+  $("emailMais").hidden = true;
+  $("emailMensagem").hidden = false;
+  $("emailAssunto").textContent = message.subject || "(Sem assunto)";
+  $("emailDe").textContent = "De " + message.from + " · " + new Date(message.date).toLocaleString("pt-BR");
+  $("emailTexto").textContent = message.text || (message.htmlOnly ? "Abra o original no webmail para ler a mensagem em HTML." : "");
+  $("emailAnexos").textContent = message.hasAttachments ? "Anexos disponíveis no webmail." : "";
+  $("emailRascunho").value = emailPending?.messageId === message.messageId ? emailPending.text : "";
+  $("emailResposta").hidden = !message.from || !message.messageId;
+  $("emailStatus").textContent = "";
+}
+
+$("email").addEventListener("toggle", () => {
+  if ($("email").open && !$("emailLista").children.length && !emailMessage) {
+    void exclusive(() => listEmail(), $("emailStatus"));
+  }
+});
+$("emailAtualizar").onclick = $("emailVoltar").onclick = () => exclusive(() => listEmail(), $("emailStatus"));
+$("emailMais").onclick = () => exclusive(() => listEmail(emailPage + 1), $("emailStatus"));
+
+$("emailResposta").addEventListener("submit", event => {
+  event.preventDefault();
+  const text = $("emailRascunho").value.trim();
+  if (!emailMessage || busy || !text) return;
+  const { uid, messageId } = emailMessage;
+  if (!emailPending || emailPending.messageId !== messageId || emailPending.text !== text) {
+    emailPending = { uid, messageId, text, commandId: crypto.randomUUID() };
+  }
+  void exclusive(async () => {
+    $("emailStatus").textContent = "Enviando pela Hostinger...";
+    const result = await callEmail("REPLY", emailPending);
+    if (result.status === "ACEITO") {
+      emailPending = null;
+      $("emailRascunho").value = "";
+      $("emailStatus").textContent = "Resposta aceita pela Hostinger e salva em Enviados.";
+    } else if (result.status === "RECUSADO") {
+      emailPending = null;
+      throw Error("A Hostinger recusou a resposta.");
+    } else {
+      throw Error("Envio ainda sem confirmação. Confira a pasta Enviados no webmail.");
+    }
+  }, $("emailStatus"));
+});
+
 $("atualizar").onclick = () => exclusive(
   () => selected ? showThread(selected) : showList(),
   selected ? $("statusConversa") : $("status")
@@ -225,6 +333,11 @@ $("sair").onclick = () => exclusive(async () => {
   const { error } = await db.auth.signOut();
   if (error) throw Error("Não foi possível sair. Tente novamente.");
   pending = selected = null;
+  emailPending = null;
+  clearEmailMessage();
+  $("email").open = false;
+  $("emailLista").replaceChildren();
+  $("emailStatus").textContent = "";
   $("texto").value = "";
   $("contato").textContent = "";
   $("status").textContent = "";
