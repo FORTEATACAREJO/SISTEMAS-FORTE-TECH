@@ -101,3 +101,19 @@ test("rotas /api/plugins exigem sessao e nao expõem referências de segredo",as
    assert.equal(bad.status,400);
  });
 });
+
+test("manifests dos cinco plugins correspondem ao registro e nunca armazenam credenciais",async()=>{
+ const {readFile}=await import("node:fs/promises");
+ for(const plugin of listarPlugins()){
+   const raw=await readFile(new URL("./"+plugin.id+"/plugin.json",import.meta.url),"utf8");
+   const manifest=JSON.parse(raw);
+   assert.equal(manifest.schema,"forte-atende-plugin/v1");
+   assert.equal(manifest.id,plugin.id);
+   assert.equal(manifest.provider,plugin.provider);
+   assert.equal(manifest.channel,plugin.canal);
+   assert.equal(manifest.enabled_by_default,false);
+   assert.equal(manifest.real_account_connected,false);
+   assert.equal(manifest.credentials_policy,"vault_only");
+   assert.ok(!/access_token|private_key|client_secret|app_secret/i.test(JSON.stringify(Object.keys(manifest))));
+ }
+});
