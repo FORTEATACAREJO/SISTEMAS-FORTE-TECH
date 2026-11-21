@@ -20,4 +20,4 @@ jobs:
       - name: Testar regras de seguranca e requisitos PWA
         run: node --test forte-atende/homologacao-gates.test.mjs
       - name: Testar integracoes sem envios reais
-        run: node --test forte-atende/plugins/plugins.test.mjs
+        run: node --test forte-atende/plugins/plugins.test.mjs forte-atende/multicanal/*.test.mjs forte-atende/email/*.test.mjs forte-atende/campanhas/*.test.mjs forte-atende/config/*.test.mjs
