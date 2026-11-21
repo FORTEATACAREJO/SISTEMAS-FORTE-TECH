@@ -55,3 +55,25 @@ test("service worker nao armazena chamadas autenticadas nem API",()=>{
  assert.match(sw,/url\.pathname\.includes\("\/api\/"\)/);
  assert.doesNotMatch(sw,/cache\.put\(/);
 });
+
+test("icones declarados sao arquivos validos, nao apenas caminhos",()=>{
+ const manifest=JSON.parse(readFileSync(join(root,"manifest.webmanifest"),"utf8"));
+ for(const icon of manifest.icons){
+  const file=join(root,icon.src);
+  assert.ok(existsSync(file),"icone inexistente: "+icon.src);
+  const bytes=readFileSync(file);
+  if(icon.type==="image/png"){
+   assert.ok(bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),"assinatura PNG invalida");
+   const width=bytes.readUInt32BE(16),height=bytes.readUInt32BE(20);
+   const [expectedWidth,expectedHeight]=icon.sizes.split("x").map(Number);
+   assert.equal(width,expectedWidth,"largura PNG divergente");
+   assert.equal(height,expectedHeight,"altura PNG divergente");
+  }else if(icon.type==="image/svg+xml"){
+   const svg=bytes.toString("utf8");
+   assert.match(svg,/<svg\\b/);
+   const [w,h]=icon.sizes.split("x").map(Number);
+   assert.match(svg,new RegExp('width=["\\']'+w+'["\\']'));
+   assert.match(svg,new RegExp('height=["\\']'+h+'["\\']'));
+  }else assert.fail("Tipo de icone nao suportado: "+icon.type);
+ }
+});
