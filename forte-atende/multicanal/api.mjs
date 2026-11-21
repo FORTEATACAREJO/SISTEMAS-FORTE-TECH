@@ -65,6 +65,13 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
        const resultado=acao[2]==="ler"?atendimento.marcarLida(actor,id):acao[2]==="assumir"?atendimento.assumir(actor,id):acao[2]==="resolver"?atendimento.resolver(actor,id):atendimento.registrarResposta(actor,id,body.texto);
        return response(res,200,{resultado});
      }
+     const gestao=url.pathname.match(new RegExp("^/api/atendimento/conversas/([^/]+)/(arquivar|restaurar|excluir|excluir-mensagem)$"));
+     if(req.method==="POST"&&gestao){
+       if(body.confirmar!==true) return response(res,400,{error:"Confirmação explícita obrigatória"});
+       const id=decodeURIComponent(gestao[1]),op=gestao[2];
+       const resultado=op==="arquivar"?atendimento.arquivar(actor,id):op==="restaurar"?atendimento.restaurar(actor,id):op==="excluir"?atendimento.excluirConversa(actor,id):atendimento.excluirMensagem(actor,id,body.mensagemId);
+       return response(res,200,{resultado});
+     }
      if(req.method==="POST"&&url.pathname==="/api/plugins/instalar")
        return response(res,201,{connection:plugins.instalar(actor,body)});
      const pluginOauth=url.pathname.match(/^\/api\/plugins\/conexoes\/([a-zA-Z0-9_-]+)\/autorizar$/);
