@@ -50,6 +50,8 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
      const actor=await authenticate(req);
      if(!actor?.tenantId||!actor?.userId||!actor?.role)return response(res,401,{error:"Sessão inválida"});
      if(req.method==="GET"&&url.pathname==="/api/atendimento/conversas")return response(res,200,{conversas:atendimento.listar(actor),resumo:atendimento.resumo(actor)});
+     if(req.method==="GET"&&url.pathname==="/api/atendimento/exclusoes")return response(res,200,{itens:atendimento.caixaExclusoes(actor)});
+     if(req.method==="POST"&&url.pathname==="/api/atendimento/exclusoes/restaurar"){if(body.confirmar!==true)return response(res,400,{error:"Confirmação obrigatória"});return response(res,200,{resultado:atendimento.recuperarExclusao(actor,body)});}
      if(req.method==="GET"&&url.pathname==="/api/atendimento/resumo")return response(res,200,atendimento.resumo(actor));
      if(req.method==="GET"&&url.pathname==="/api/provedores")return response(res,200,{providers:listarProvedores()});
      if(req.method==="GET"&&url.pathname==="/api/plugins")return response(res,200,{plugins:plugins.catalogo(actor,{canal:url.searchParams.get("canal")||undefined})});
@@ -68,6 +70,7 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
      const gestao=url.pathname.match(new RegExp("^/api/atendimento/conversas/([^/]+)/(arquivar|restaurar|excluir|excluir-mensagem)$"));
      if(req.method==="POST"&&gestao){
        if(body.confirmar!==true) return response(res,400,{error:"Confirmação explícita obrigatória"});
+       if(["excluir","excluir-mensagem"].includes(gestao[2]) && body.confirmarUsuario!==actor.userId)return response(res,400,{error:"Confirmação deve identificar o usuário autenticado"});
        const id=decodeURIComponent(gestao[1]),op=gestao[2];
        const resultado=op==="arquivar"?atendimento.arquivar(actor,id):op==="restaurar"?atendimento.restaurar(actor,id):op==="excluir"?atendimento.excluirConversa(actor,id):atendimento.excluirMensagem(actor,id,body.mensagemId);
        return response(res,200,{resultado});
