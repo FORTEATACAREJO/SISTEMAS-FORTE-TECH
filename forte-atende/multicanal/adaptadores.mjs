@@ -67,7 +67,7 @@ export function criarAdaptadores({resolveSecret,fetcher=fetch,imapSmtpTransport=
       for(const m of (page.messages??[])){
         const detailed=await expectJson(await fetcher(GOOGLE+"/messages/"+encodeURIComponent(m.id)+"?format=full",{headers:h}));
         const hs=extractHeaders(detailed.payload?.headers);
-        result.push({externalId:String(detailed.id),from:hs.from,to:hs.to??c.identity,
+        result.push({externalId:String(detailed.id),from:parseAddress(hs.from),to:hs.to??c.identity,
           subject:hs.subject??"",text:detailed.snippet??"",receivedAt:new Date(Number(detailed.internalDate)||Date.now()).toISOString()});
       }
       return result;
