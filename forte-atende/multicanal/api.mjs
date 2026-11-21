@@ -49,6 +49,7 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
      if(req.headers.authorization?.startsWith("Bearer ")!==true)return response(res,401,{error:"Sessão obrigatória"});
      const actor=await authenticate(req);
      if(!actor?.tenantId||!actor?.userId||!actor?.role)return response(res,401,{error:"Sessão inválida"});
+     const body=req.method==="POST"?JSON.parse((await readBody(req)).toString("utf8")||"{}"):{};
      if(req.method==="GET"&&url.pathname==="/api/atendimento/conversas")return response(res,200,{conversas:atendimento.listar(actor),resumo:atendimento.resumo(actor)});
      if(req.method==="GET"&&url.pathname==="/api/atendimento/exclusoes")return response(res,200,{itens:atendimento.caixaExclusoes(actor)});
      if(req.method==="POST"&&url.pathname==="/api/atendimento/exclusoes/restaurar"){if(body.confirmar!==true)return response(res,400,{error:"Confirmação obrigatória"});return response(res,200,{resultado:atendimento.recuperarExclusao(actor,body)});}
@@ -59,7 +60,7 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
      if(req.method==="GET"&&url.pathname==="/api/mensagens"){
        return response(res,200,{messages:central.caixaEntrada(actor,{connectionId:url.searchParams.get("connectionId")||undefined,limit:Number(url.searchParams.get("limit"))||50})});
      }
-     const body=req.method==="POST"?JSON.parse((await readBody(req)).toString("utf8")||"{}"):{};
+
      if(req.method==="POST"&&url.pathname==="/api/atendimento/contatos")return response(res,201,{contato:atendimento.contato(actor,body)});
      const acao=url.pathname.match(new RegExp("^/api/atendimento/conversas/([^/]+)/(ler|assumir|resolver|responder)$"));
      if(req.method==="POST"&&acao){
