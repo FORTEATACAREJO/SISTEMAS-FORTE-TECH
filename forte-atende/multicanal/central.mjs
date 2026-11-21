@@ -153,7 +153,7 @@ export class CentralMulticanal {
     try{
       const sent=await adapter.send(c,d);
       if(!sent?.externalId)throw Error("Resposta do provedor sem ID de envio");
-      return this.store.putDraft({...d,status:"sent",externalId:String(sent.externalId),
+      return this.store.putDraft({...d,status:sent.acceptedOnly?"accepted":"sent",externalId:String(sent.externalId),
         sentAt:this.clock().toISOString()});
     }catch(e){
       this.store.putDraft({...d,status:"unknown",errorCode:"DELIVERY_UNCERTAIN"});
