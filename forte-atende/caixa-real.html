@@ -73,6 +73,16 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
 .customer-row p{margin-top:4px}
 .customer-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
 @media(max-width:540px){.channels{grid-template-columns:repeat(2,minmax(0,1fr))}}
+#clienteEnvio{width:min(92vw,520px);max-height:90dvh;overflow:auto;border:1px solid var(--line);border-radius:18px;padding:20px;color:var(--ink)}
+#clienteEnvio::backdrop{background:#102f4480}
+#clienteEnvio fieldset{border:1px solid var(--line);border-radius:12px;margin:12px 0;padding:10px}
+#clienteEnvio legend{font-weight:650}
+.compose-channel{display:flex;gap:8px;align-items:flex-start;overflow-wrap:anywhere}
+.compose-channel input{width:auto;margin:4px 0}
+.compose-channel + .compose-channel{margin-top:8px}
+.compose-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:12px}
+#clienteEnvioResultado{padding-left:20px}
+#clienteEnvioResultado:empty{display:none}
 </style>
 </head>
 <body>
@@ -181,6 +191,29 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
     </section>
   </section>
 </main>
+<dialog id="clienteEnvio" aria-labelledby="clienteEnvioTitulo">
+  <h2 id="clienteEnvioTitulo">Enviar mensagem</h2>
+  <p id="clienteEnvioNome" class="muted"></p>
+  <form id="clienteEnvioForm">
+    <fieldset>
+      <legend>Canais de envio</legend>
+      <label class="compose-channel"><input id="clienteEnvioWhatsApp" type="checkbox"><span id="clienteEnvioNumero"></span></label>
+      <label class="compose-channel"><input id="clienteEnvioEmail" type="checkbox"><span id="clienteEnvioEndereco"></span></label>
+    </fieldset>
+    <div id="clienteEnvioAssuntoCampo">
+      <label for="clienteEnvioAssunto">Assunto do e-mail</label>
+      <input id="clienteEnvioAssunto" maxlength="180" value="Contato da Forte Atacarejo">
+    </div>
+    <label for="clienteEnvioTexto">Mensagem</label>
+    <textarea id="clienteEnvioTexto" maxlength="10000" rows="5" required></textarea>
+    <p id="clienteEnvioStatus" class="status" role="status"></p>
+    <ul id="clienteEnvioResultado" aria-live="polite"></ul>
+    <div class="compose-actions">
+      <button id="clienteEnvioFechar" class="quiet" type="button">Fechar</button>
+      <button id="clienteEnvioEnviar" type="submit">Enviar</button>
+    </div>
+  </form>
+</dialog>
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 
@@ -620,6 +653,111 @@ function customerButton(label, callback) {
   return button;
 }
 
+let composeCustomer = null;
+let composeBusy = false;
+let composeCompleted = false;
+const composeChannels = {
+  whatsapp: { check: "clienteEnvioWhatsApp", label: "WhatsApp" },
+  email: { check: "clienteEnvioEmail", label: "E-mail" }
+};
+
+function selectedChannels() {
+  return Object.keys(composeChannels).filter(channel => $(composeChannels[channel].check).checked);
+}
+
+function updateCompose() {
+  const channels = selectedChannels();
+  const email = channels.includes("email");
+  const whatsapp = channels.includes("whatsapp");
+  $("clienteEnvioAssuntoCampo").hidden = !email;
+  $("clienteEnvioAssunto").required = email;
+  $("clienteEnvioTexto").maxLength = whatsapp ? 4096 : 10000;
+  const missing = channels.some(channel => channel === "email" ? !composeCustomer?.email : !(composeCustomer?.whatsapp || composeCustomer?.telefone));
+  $("clienteEnvioEnviar").disabled = composeBusy || composeCompleted || !channels.length || missing;
+}
+
+function showCustomerCompose(customer, channels) {
+  if (busy || $("clienteEnvio").open) return;
+  composeCustomer = customer;
+  composeCompleted = false;
+  const phone = customer.whatsapp || customer.telefone;
+  $("clienteEnvioNome").textContent = customer.nome || customer.razao_social || customer.fantasia || "Cliente";
+  $("clienteEnvioNumero").textContent = "WhatsApp · " + (phone || "número não cadastrado");
+  $("clienteEnvioEndereco").textContent = "E-mail · " + (customer.email || "endereço não cadastrado");
+  $("clienteEnvioWhatsApp").checked = channels.includes("whatsapp");
+  $("clienteEnvioEmail").checked = channels.includes("email");
+  $("clienteEnvioWhatsApp").disabled = false;
+  $("clienteEnvioEmail").disabled = false;
+  $("clienteEnvioAssunto").value = "Contato da Forte Atacarejo";
+  $("clienteEnvioAssunto").readOnly = false;
+  $("clienteEnvioTexto").value = "";
+  $("clienteEnvioTexto").readOnly = false;
+  $("clienteEnvioResultado").replaceChildren();
+  $("clienteEnvioStatus").className = "status";
+  const missing = channels.filter(channel => channel === "email" ? !customer.email : !phone);
+  $("clienteEnvioStatus").textContent = missing.length ?
+    "Falta cadastrar " + missing.map(channel => composeChannels[channel].label).join(" e ") +
+      " no FORTE OPERACIONAL. Para enviar por outro canal, desmarque o que está sem contato." :
+    "Confira os destinatários. Quando os dois canais forem selecionados, o texto será o mesmo.";
+  updateCompose();
+  $("clienteEnvio").showModal();
+}
+
+$("clienteEnvioWhatsApp").onchange = $("clienteEnvioEmail").onchange = updateCompose;
+$("clienteEnvioFechar").onclick = () => $("clienteEnvio").close();
+$("clienteEnvio").addEventListener("cancel", event => {
+  if (composeBusy) event.preventDefault();
+});
+$("clienteEnvio").addEventListener("close", () => { composeCustomer = null; });
+$("clienteEnvioForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!composeCustomer || composeBusy || composeCompleted) return;
+  const channels = selectedChannels();
+  const text = $("clienteEnvioTexto").value.trim();
+  const subject = $("clienteEnvioAssunto").value.trim();
+  const status = $("clienteEnvioStatus");
+  if ($("clienteEnvioEnviar").disabled || !channels.length || !text || (channels.includes("whatsapp") && text.length > 4096) ||
+      (channels.includes("email") && !subject)) {
+    status.textContent = "Confira os canais, o assunto e o tamanho da mensagem.";
+    return;
+  }
+
+  composeBusy = true;
+  const customer = composeCustomer;
+  const commandId = crypto.randomUUID();
+  $("clienteEnvioFechar").disabled = true;
+  $("clienteEnvioWhatsApp").disabled = $("clienteEnvioEmail").disabled = true;
+  $("clienteEnvioTexto").readOnly = $("clienteEnvioAssunto").readOnly = true;
+  status.textContent = "Enviando...";
+  updateCompose();
+  try {
+    const outcomes = await Promise.allSettled(channels.map(async channel => {
+      const destination = channel === "email" ? customer.email : customer.whatsapp || customer.telefone;
+      return await callEmail("CLIENT_SEND", { channel, customerId: customer.id, destination, text, subject, commandId });
+    }));
+    const descriptions = {
+      ACEITO: "Envio aceito pelo provedor.",
+      RECUSADO: "Envio recusado pelo provedor.",
+      BLOQUEADO: "Envio bloqueado.",
+      PROCESSANDO: "Envio em processamento.",
+      INCERTO: "Status incerto. Confira o histórico antes de reenviar."
+    };
+    outcomes.forEach((outcome, index) => {
+      const label = composeChannels[channels[index]].label;
+      const result = outcome.status === "fulfilled" ? outcome.value : null;
+      const detail = result ? result.detail || descriptions[result.status] || descriptions.INCERTO :
+        outcome.reason?.message || descriptions.INCERTO;
+      $("clienteEnvioResultado").append(t("li", label + " · " + detail));
+    });
+    status.textContent = "Confira o resultado de cada canal.";
+    composeCompleted = true;
+  } finally {
+    composeBusy = false;
+    $("clienteEnvioFechar").disabled = false;
+    updateCompose();
+  }
+});
+
 async function customerConversation(customer, channel) {
   const status = $("clientesStatus");
   const list = $("clientesConversas");
@@ -681,10 +819,22 @@ $("buscarClientes").addEventListener("submit", event => {
       if (customer.email) row.append(t("p", "E-mail · " + customer.email));
       const actions = t("div", "");
       actions.className = "customer-actions";
-      if (customer.whatsapp || customer.telefone) actions.append(customerButton("Abrir WhatsApp", () => exclusive(() => customerConversation(customer, "whatsapp"), status)));
-      if (customer.email) actions.append(customerButton("Ver e-mails", () => exclusive(() => customerConversation(customer, "email"), status)));
-      if (actions.children.length) row.append(actions);
-      else row.append(t("p", "Contato ainda não informado no FORTE OPERACIONAL."));
+      actions.append(
+        customerButton("WhatsApp", () => showCustomerCompose(customer, ["whatsapp"])),
+        customerButton("E-mail", () => showCustomerCompose(customer, ["email"])),
+        customerButton("Enviar pelos dois", () => showCustomerCompose(customer, ["whatsapp", "email"]))
+      );
+      if (!customer.whatsapp && !customer.telefone && !customer.email) {
+        row.append(t("p", "Contato ainda não informado no FORTE OPERACIONAL."));
+      }
+      row.append(actions);
+      if (customer.whatsapp || customer.telefone || customer.email) {
+        const history = t("div", "");
+        history.className = "customer-actions";
+        if (customer.whatsapp || customer.telefone) history.append(customerButton("Ver conversa", () => exclusive(() => customerConversation(customer, "whatsapp"), status)));
+        if (customer.email) history.append(customerButton("Ver e-mails", () => exclusive(() => customerConversation(customer, "email"), status)));
+        row.append(history);
+      }
       list.append(row);
     }
     status.textContent = !items.length ? "Nenhum cliente encontrado." :

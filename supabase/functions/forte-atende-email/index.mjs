@@ -14,6 +14,65 @@ const cors = {
 
 const json = (data, status = 200) => Response.json(data, { status, headers: cors });
 const problem = (status, message) => Object.assign(new Error(message), { status });
+function normalizePhone(value) {
+  const raw = String(value || "").trim();
+  if (!/^\+?[\d\s().-]+$/.test(raw)) return "";
+  const digits = raw.replace(/\D/g, "");
+  return !raw.startsWith("+") && /^\d{10,11}$/.test(digits) ? "55" + digits : digits;
+}
+
+async function matchingThreads(db, company, phone) {
+  const { data, error } = await db.from("whatsapp_inbox_state").select("threads:estado->whatsappInboxThreads")
+    .eq("empresa_id", company).maybeSingle();
+  if (error) throw problem(503, "Não foi possível consultar as conversas de WhatsApp.");
+  return (data?.threads || []).filter(thread => normalizePhone(thread.phone) === phone);
+}
+
+async function sendEmail(db, company, commandId, facts, base, token, payload) {
+  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(facts)));
+  const fingerprint = Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, "0")).join("");
+  const key = { empresa_id: company, command_id: commandId };
+  const jobs = () => db.from("forte_atende_email_envios");
+  const created = await jobs().insert({ ...key, fingerprint });
+  if (created.error?.code === "23505") {
+    const previous = await jobs().select("status,fingerprint").match(key).single();
+    if (previous.error || previous.data.fingerprint !== fingerprint) {
+      throw problem(409, "Identificador de envio já utilizado.");
+    }
+    return previous.data.status;
+  }
+  if (created.error) throw problem(503, "Não foi possível registrar o envio.");
+
+  let status = "ACEITO";
+  try {
+    await provider(base + "/send", token, payload);
+  } catch (error) {
+    status = [404, 422, 503].includes(error.status) ? "RECUSADO" : "INCERTO";
+  }
+  const saved = await jobs().update({ status }).match(key);
+  return saved.error ? "INCERTO" : status;
+}
+
+async function sendWhatsApp(url, authorization, thread, text, commandId) {
+  let response, payload;
+  try {
+    response = await fetch(url + "/functions/v1/order-communications", {
+      method: "POST",
+      headers: { Authorization: authorization, apikey: env("SUPABASE_ANON_KEY"), "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "INBOX_REPLY", threadId: thread.id, text, commandId }),
+      signal: AbortSignal.timeout(35000)
+    });
+    payload = await response.json();
+  } catch {
+    return { status: "INCERTO" };
+  }
+  if (!response.ok) {
+    return { status: "INCERTO", detail: payload.error || "Não foi possível confirmar o envio pelo WhatsApp." };
+  }
+  const state = payload.message?.state;
+  return { status: ["SENT", "DELIVERED", "READ"].includes(state) ? "ACEITO" : state === "FAILED" ? "RECUSADO" : "INCERTO" };
+}
+
 const emailPattern = /^[^\s<>@,;]+@[^\s<>@,;]+\.[^\s<>@,;]+$/;
 const requestIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -95,11 +154,20 @@ Deno.serve(async req => {
     if (raw.length > 80000) return json({ error: "Requisição muito grande." }, 413);
     let body;
     try { body = JSON.parse(raw); } catch { return json({ error: "Requisição inválida." }, 400); }
-    if (!["LIST", "OPEN", "REPLY", "EXCLUSIONS", "EXCLUDE", "RESTORE", "CLIENT_SEARCH", "CLIENT_WHATSAPP", "CLIENT_EMAILS"].includes(body?.action)) {
+    if (!["LIST", "OPEN", "REPLY", "EXCLUSIONS", "EXCLUDE", "RESTORE", "CLIENT_SEARCH", "CLIENT_WHATSAPP", "CLIENT_EMAILS", "CLIENT_SEND"].includes(body?.action)) {
       return json({ error: "Ação inválida." }, 400);
     }
 
     let customer;
+    const compose = body.action === "CLIENT_SEND";
+    const text = typeof body.text === "string" ? body.text.trim() : "";
+    const subject = typeof body.subject === "string" ? body.subject.trim() : "";
+    if (compose && (!["whatsapp", "email"].includes(body.channel) || !text ||
+        text.length > (body.channel === "whatsapp" ? 4096 : 10000) ||
+        !requestIdPattern.test(String(body.commandId || "")) ||
+        (body.channel === "email" && (!subject || subject.length > 180 || /[\r\n]/.test(subject))))) {
+      return json({ error: "Confira o canal, o assunto e o texto da mensagem." }, 400);
+    }
     if (body.action.startsWith("CLIENT_")) {
       const query = typeof body.query === "string" ? body.query.trim() : "";
       const lookup = body.action !== "CLIENT_SEARCH";
@@ -115,22 +183,36 @@ Deno.serve(async req => {
       if (data.length !== 1) return json({ error: "Cadastro indisponível. Faça a busca novamente." }, 404);
       customer = data[0];
 
-      if (body.action === "CLIENT_WHATSAPP") {
-        const number = customer.whatsapp || customer.telefone;
-        const normalizePhone = value => {
-          const raw = String(value || "").trim();
-          const digits = raw.replace(/\D/g, "");
-          return !raw.startsWith("+") && /^\d{10,11}$/.test(digits) ? "55" + digits : digits;
-        };
-        const phone = normalizePhone(number);
-        if (!/^\d{8,15}$/.test(phone)) return json({ error: "Este cadastro não tem um número válido." }, 422);
-        const { data: row, error } = await db.from("whatsapp_inbox_state").select("threads:estado->whatsappInboxThreads")
-          .eq("empresa_id", profile.empresa_id).maybeSingle();
-        if (error) throw problem(503, "Não foi possível consultar as conversas de WhatsApp.");
-        const threads = (row?.threads || []).filter(thread => normalizePhone(thread.phone) === phone);
-        return json({ threads: threads.map(thread => ({ id: thread.id, name: thread.name, phone: thread.phone })) });
+      if (body.action === "CLIENT_WHATSAPP" || (compose && body.channel === "whatsapp")) {
+        const phone = normalizePhone(customer.whatsapp || customer.telefone);
+        if (!/^[1-9]\d{7,14}$/.test(phone)) return json({ error: "Este cadastro não tem um número válido." }, 422);
+        if (compose && phone !== normalizePhone(body.destination)) {
+          return json({ error: "O número do cliente mudou. Faça a busca novamente." }, 409);
+        }
+        const threads = await matchingThreads(db, profile.empresa_id, phone);
+        if (!compose) return json({ threads: threads.map(thread => ({ id: thread.id, name: thread.name, phone: thread.phone })) });
+        if (threads.length !== 1) {
+          return json({ status: "BLOQUEADO", detail: threads.length ?
+            "Há mais de uma conversa com esse número. Selecione a correta na aba WhatsApp." :
+            "Não há conversa aberta com esse cliente. O primeiro contato pela API exige um modelo aprovado." });
+        }
+        const { data: state, error: stateError } = await db.from("whatsapp_inbox_state")
+          .select("messages:estado->whatsappInboxMessages").eq("empresa_id", profile.empresa_id).maybeSingle();
+        if (stateError) throw problem(503, "Não foi possível verificar a janela do WhatsApp.");
+        const now = Date.now();
+        const eligible = (state?.messages || []).some(message => {
+          const at = Date.parse(message.at);
+          return message.threadId === threads[0].id && message.direction === "IN" &&
+            at <= now && now - at < 86400000;
+        });
+        if (!eligible) return json({ status: "BLOQUEADO", detail: "Janela de 24 horas fechada. O WhatsApp exige um modelo aprovado para retomar." });
+        return json(await sendWhatsApp(url, authorization, threads[0], text, body.commandId));
       }
+
       if (!emailPattern.test(customer.email)) return json({ error: "Este cadastro não tem um e-mail válido." }, 422);
+      if (compose && customer.email.toLowerCase() !== String(body.destination || "").trim().toLowerCase()) {
+        return json({ error: "O e-mail do cliente mudou. Faça a busca novamente." }, 409);
+      }
     }
 
     const exclusions = () => db.from("forte_atende_exclusoes");
@@ -191,6 +273,12 @@ Deno.serve(async req => {
     if (!mailbox?.resourceId) return json({ error: "A credencial não tem acesso à caixa Contato." }, 503);
     const base = "/mailboxes/" + encodeURIComponent(mailbox.resourceId);
     const inbox = base + "/folders/INBOX/messages";
+    if (compose) {
+      const status = await sendEmail(db, profile.empresa_id, body.commandId,
+        [user.id, "cliente", customer.id, customer.email.toLowerCase(), subject, text],
+        base, token, { to: [customer.email], subject, text });
+      return json({ status });
+    }
     if (body.action === "CLIENT_EMAILS") {
       const expected = customer.email.toLowerCase();
       const result = await provider(inbox + "/search?perPage=25&sort=-uid", token, { from: customer.email });
@@ -221,42 +309,18 @@ Deno.serve(async req => {
         htmlOnly: !contents.text && Boolean(contents.html) });
     }
 
-    const text = typeof body.text === "string" ? body.text.trim() : "";
     if (!text || text.length > 10000 || !requestIdPattern.test(String(body.commandId || "")) ||
         !message.messageId || body.messageId !== message.messageId ||
         !emailPattern.test(message.from?.address || "")) {
       return json({ error: "Confira a mensagem original, o remetente e o texto da resposta." }, 400);
     }
-    const fingerprintBytes = await crypto.subtle.digest(
-      "SHA-256", new TextEncoder().encode(JSON.stringify([user.id, message.messageId, text]))
-    );
-    const fingerprint = Array.from(new Uint8Array(fingerprintBytes), byte => byte.toString(16).padStart(2, "0")).join("");
-    const key = { empresa_id: profile.empresa_id, command_id: body.commandId };
-    const jobs = () => db.from("forte_atende_email_envios");
-    const created = await jobs().insert({ ...key, fingerprint });
-    if (created.error?.code === "23505") {
-      const previous = await jobs().select("status,fingerprint").match(key).single();
-      if (previous.error || previous.data.fingerprint !== fingerprint) {
-        return json({ error: "Identificador de envio já utilizado." }, 409);
-      }
-      return json({ status: previous.data.status });
-    }
-    if (created.error) throw problem(503, "Não foi possível registrar o envio.");
-
-    let status = "ACEITO";
-    try {
-      const subject = (message.subject || "").replace(/[\r\n]/g, " ").trim();
-      await provider(base + "/send", token, {
-        to: [message.from.address],
-        subject: /^re:/i.test(subject) ? subject : "Re: " + subject,
-        text,
-        inReplyTo: { uid: body.uid, folder: "INBOX" }
+    const originalSubject = (message.subject || "").replace(/[\r\n]/g, " ").trim();
+    const status = await sendEmail(db, profile.empresa_id, body.commandId, [user.id, message.messageId, text],
+      base, token, {
+        to: [message.from.address], subject: /^re:/i.test(originalSubject) ? originalSubject : "Re: " + originalSubject,
+        text, inReplyTo: { uid: body.uid, folder: "INBOX" }
       });
-    } catch (error) {
-      status = [404, 422, 503].includes(error.status) ? "RECUSADO" : "INCERTO";
-    }
-    const saved = await jobs().update({ status }).match(key);
-    return json({ status: saved.error ? "INCERTO" : status });
+    return json({ status });
   } catch (error) {
     if (error.status) return json({ error: error.message }, error.status);
     console.error("FORTE_ATENDE_EMAIL_ERROR");
