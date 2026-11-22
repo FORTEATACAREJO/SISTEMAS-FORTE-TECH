@@ -43,6 +43,7 @@
       <button id="voltar" type="button">Voltar às conversas</button>
       <h2 id="contato"></h2>
       <div id="mensagens"></div>
+      <p id="janelaWhatsApp"></p>
       <form id="resposta" hidden>
         <label for="texto">Sua resposta</label>
         <textarea id="texto" maxlength="4096" rows="3" required></textarea>
@@ -82,21 +83,24 @@ const delivery = {
 };
 let selected = null;
 let offset = 0;
+let listSnapshot = "";
+let threadSnapshot = "";
 let busy = false;
 let pending = null;
 
-async function exclusive(task, status) {
+async function exclusive(task, status, background = false) {
   if (busy) return;
   busy = true;
-  status.className = "";
-  for (const id of ["atualizar", "sair", "enviar", "mais", "voltar", "texto", "emailEnviar", "emailRascunho", "emailAtualizar", "emailMais", "emailVoltar"]) $(id).disabled = true;
+  if (!background) status.className = "";
+  if (!background) for (const id of ["atualizar", "sair", "enviar", "mais", "voltar", "texto", "emailEnviar", "emailRascunho", "emailAtualizar", "emailMais", "emailVoltar"]) $(id).disabled = true;
   try {
     await task();
   } catch (error) {
+    if (background) return;
     status.textContent = error.message;
     status.className = "error";
   } finally {
-    for (const id of ["atualizar", "sair", "enviar", "mais", "voltar", "texto", "emailEnviar", "emailRascunho", "emailAtualizar", "emailMais", "emailVoltar"]) $(id).disabled = false;
+    if (!background) for (const id of ["atualizar", "sair", "enviar", "mais", "voltar", "texto", "emailEnviar", "emailRascunho", "emailAtualizar", "emailMais", "emailVoltar"]) $(id).disabled = false;
     busy = false;
   }
 }
@@ -105,11 +109,18 @@ function contactName(thread) {
   return thread.name || thread.phone || "Conversa de WhatsApp";
 }
 
-async function showList(reset = true) {
+async function showList(reset = true, background = false) {
   const list = $("conversas");
-  $("status").textContent = "Consultando WhatsApp...";
+  if (!background) $("status").textContent = "Consultando WhatsApp...";
   const page = await callInbox("INBOX_LIST", { offset: reset ? 0 : offset });
+  const snapshot = JSON.stringify([page.total, page.threads.map(thread => [thread.id, thread.name, thread.phone, thread.unread, thread.lastAt])]);
+  const status = $("status");
+  status.className = "";
+  status.textContent = page.total + (page.total === 1 ? " conversa no WhatsApp" : " conversas no WhatsApp");
+  if (background && snapshot === listSnapshot) return;
   if (reset) {
+    listSnapshot = snapshot;
+    threadSnapshot = "";
     selected = null;
     $("conversa").hidden = true;
     $("resposta").hidden = true;
@@ -128,17 +139,26 @@ async function showList(reset = true) {
   }
   offset += page.threads.length;
   $("mais").hidden = offset >= page.total;
-  $("status").textContent = page.total + (page.total === 1 ? " conversa no WhatsApp" : " conversas no WhatsApp");
 }
 
 async function showThread(threadId) {
   const page = await callInbox("INBOX_MESSAGES", { threadId });
-  if (selected !== threadId) $("texto").value = pending?.threadId === threadId ? pending.text : "";
+  if (selected !== threadId) {
+    threadSnapshot = "";
+    $("statusConversa").textContent = "";
+    $("statusConversa").className = "";
+    $("texto").value = pending?.threadId === threadId ? pending.text : "";
+  }
   selected = threadId;
   $("conversas").hidden = true;
   $("mais").hidden = true;
   $("conversa").hidden = false;
   $("contato").textContent = contactName(page.thread);
+  const snapshot = JSON.stringify([page.canReply, page.messages.map(message => [message.id, message.at, message.state])]);
+  if (snapshot === threadSnapshot) return;
+  threadSnapshot = snapshot;
+  $("resposta").hidden = !page.canReply;
+  $("janelaWhatsApp").textContent = page.canReply ? "" : "A janela de resposta de 24 horas fechou. Ela reabre quando o contato mandar uma nova mensagem.";
   const messages = $("mensagens");
   messages.replaceChildren();
   for (const message of page.messages) {
@@ -151,8 +171,6 @@ async function showThread(threadId) {
       t("p", message.text || (message.mediaId ? "Anexo de WhatsApp" : "Mensagem de WhatsApp")));
     messages.append(card);
   }
-  $("resposta").hidden = !page.canReply;
-  $("statusConversa").textContent = page.canReply ? "" : "Respostas livres ficam disponíveis por 24 horas após a última mensagem do contato.";
 }
 
 async function load() {
@@ -179,15 +197,16 @@ $("resposta").addEventListener("submit", event => {
     } catch (error) {
       throw Error(error.message + " Atualize a conversa para conferir o resultado antes de tentar de novo.");
     }
-    pending = null;
-    $("texto").value = "";
     const state = result.message?.state;
+    if (["SENT", "DELIVERED", "READ"].includes(state)) $("texto").value = "";
+    if (state === "FAILED" || ["SENT", "DELIVERED", "READ"].includes(state)) pending = null;
     const status = state === "FAILED" ? "A Meta recusou o envio." :
       state === "UNCERTAIN" ? "Envio incerto. Atualize a conversa para conferir o resultado antes de enviar novamente." :
       delivery[state] || "Atualize a conversa para conferir o envio.";
     $("statusConversa").textContent = status;
     await showThread(threadId).catch(() => {});
     $("statusConversa").textContent = status;
+    $("statusConversa").className = ["FAILED", "UNCERTAIN"].includes(state) ? "error" : "";
   }, $("statusConversa"));
 });
 
@@ -333,6 +352,7 @@ $("sair").onclick = () => exclusive(async () => {
   const { error } = await db.auth.signOut();
   if (error) throw Error("Não foi possível sair. Tente novamente.");
   pending = selected = null;
+  threadSnapshot = listSnapshot = "";
   emailPending = null;
   clearEmailMessage();
   $("email").open = false;
@@ -346,6 +366,14 @@ $("sair").onclick = () => exclusive(async () => {
   $("login").style.display = "block";
   $("inbox").style.display = "none";
 }, selected ? $("statusConversa") : $("status"));
+function refreshWhatsApp() {
+  if (document.hidden || busy || $("inbox").style.display !== "block" || $("email").open) return;
+  if (selected) void exclusive(() => showThread(selected), $("statusConversa"), true);
+  else if (offset <= 100) void exclusive(() => showList(true, true), $("status"), true);
+}
+
+document.addEventListener("visibilitychange", refreshWhatsApp);
+setInterval(refreshWhatsApp, 20000);
 await load();
 </script>
 </body></html>
