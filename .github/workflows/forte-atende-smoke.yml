@@ -17,7 +17,7 @@ jobs:
           set -euo pipefail
           BASE="https://forte-atende-homologacao.onrender.com"
           for attempt in {1..20}; do
-            if curl --fail --silent --show-error --location --max-time 15 "$BASE/manifest.webmanifest" -o /tmp/manifest.json && curl --fail --silent --show-error --location --max-time 15 "$BASE/icons/forte-atende-192.png" -o /tmp/icon192.png && curl --fail --silent --show-error --location --max-time 15 "$BASE/icons/forte-atende-512.svg" -o /tmp/icon512.svg && curl --fail --silent --show-error --location --max-time 15 "$BASE/painel.html" -o /tmp/painel.html; then
+            if curl --fail --silent --show-error --location --max-time 15 "$BASE/manifest.webmanifest" -o /tmp/manifest.json && curl --fail --silent --show-error --location --max-time 15 "$BASE/icons/forte-atende-192.png" -o /tmp/icon192.png && curl --fail --silent --show-error --location --max-time 15 "$BASE/icons/forte-atende-512.svg" -o /tmp/icon512.svg && curl --fail --silent --show-error --location --max-time 15 "$BASE/painel.html" -o /tmp/painel.html && curl --fail --silent --show-error --location --max-time 15 "$BASE/caixa-real.html" -o /tmp/caixa-real.html && grep -Fq 'content="0;url=./caixa-real.html"' /tmp/painel.html && grep -Fq 'login-cpf' /tmp/caixa-real.html && grep -Fq './caixa-real.html' /tmp/manifest.json; then
               break
             fi
             if [[ "$attempt" -eq 20 ]]; then echo "Deploy publico indisponivel"; exit 1; fi
@@ -27,6 +27,8 @@ jobs:
           import json, pathlib, struct
           manifest=json.loads(pathlib.Path('/tmp/manifest.json').read_text())
           assert manifest['display']=='standalone'
+          assert manifest['id']=='/painel.html'
+          assert manifest['start_url']=='./caixa-real.html'
           png=pathlib.Path('/tmp/icon192.png').read_bytes()
           assert png[:8]==b'\x89PNG\r\n\x1a\n'
           w,h=struct.unpack('>II',png[16:24])
@@ -34,6 +36,8 @@ jobs:
           svg=pathlib.Path('/tmp/icon512.svg').read_text()
           assert '<svg' in svg and '512' in svg
           html=pathlib.Path('/tmp/painel.html').read_text()
-          assert 'rel="manifest"' in html
+          assert 'content="0;url=./caixa-real.html"' in html
+          real=pathlib.Path('/tmp/caixa-real.html').read_text()
+          assert 'rel="manifest"' in real and 'login-cpf' in real
           print("Arquivos PWA acessiveis; instalacao em Android ainda requer teste em dispositivo.")
           PY

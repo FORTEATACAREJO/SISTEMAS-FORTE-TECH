@@ -35,7 +35,8 @@ test("PWA somente pode ser liberado com manifesto e icones fisicos",()=>{
  }
  const manifest=JSON.parse(readFileSync(manifestPath,"utf8"));
  assert.equal(manifest.display,"standalone");
- assert.ok(manifest.start_url);
+ assert.equal(manifest.id,"/painel.html");
+ assert.equal(manifest.start_url,"./caixa-real.html");
  for(const size of ["192x192","512x512"]){
   const icon=manifest.icons?.find(x=>x.sizes?.split(" ").includes(size));
   assert.ok(icon,"icone PWA ausente: "+size);
@@ -43,17 +44,26 @@ test("PWA somente pode ser liberado com manifesto e icones fisicos",()=>{
  }
 });
 
-test("painel vincula manifesto e registra service worker apenas em HTTPS",()=>{
- const html=readFileSync(join(root,"painel.html"),"utf8");
+test("caixa real vincula manifesto e registra service worker apenas em HTTPS",()=>{
+ const html=readFileSync(join(root,"caixa-real.html"),"utf8");
  assert.match(html,/<link rel="manifest" href="\.\/manifest\.webmanifest">/);
  assert.match(html,/navigator\.serviceWorker\.register\('\.\/service-worker\.js'\)/);
  assert.match(html,/location\.protocol === 'https:'/);
+});
+test("atalhos antigos e raiz levam à caixa real",()=>{
+ for (const path of ["index.html", "painel.html"]) {
+  const html=readFileSync(join(root,path),"utf8");
+  assert.ok(html.includes('http-equiv="refresh" content="0;url=./caixa-real.html"'));
+  assert.ok(html.includes('href="./caixa-real.html"'));
+  assert.doesNotMatch(html,/VISUAL PROGRAMADO|Cliente Exemplo/i);
+ }
 });
 test("service worker nao armazena chamadas autenticadas nem API",()=>{
  const sw=readFileSync(join(root,"service-worker.js"),"utf8");
  assert.match(sw,/req\.headers\.has\("authorization"\)/);
  assert.match(sw,/url\.pathname\.includes\("\/api\/"\)/);
- assert.doesNotMatch(sw,/cache\.put\(/);
+ assert.doesNotMatch(sw,/cache\.put\(|caches\.match\(/);
+ assert.match(sw,/caches\.delete\(key\)/);
 });
 
 test("icones declarados sao arquivos validos, nao apenas caminhos",()=>{

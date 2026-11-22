@@ -5,6 +5,18 @@
   X-Robots-Tag: noindex, nofollow
   Permissions-Policy: camera=(), microphone=(), geolocation=()
 
+/caixa-real.html
+  Cache-Control: no-store
+
+/index.html
+  Cache-Control: no-store
+
+/manifest.webmanifest
+  Cache-Control: no-cache
+
+/service-worker.js
+  Cache-Control: no-cache
+
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
