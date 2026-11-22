@@ -1,16 +1,22 @@
-import {criarServidorApi} from "./api.mjs";
-import {CentralMulticanal} from "./central.mjs";
+import { criarServidorApi } from "./api.mjs";
+import { CentralMulticanal } from "./central.mjs";
+import { criarIntegracaoOperacional } from "../plugins/operacional.mjs";
 
-// Ambiente de homologacao: todas as rotas privadas negam acesso ate
-// a configuracao de um provedor de identidade validado no servidor.
-// Nao aceitar identidade, papel ou tenant vindos de headers do cliente.
-const central=new CentralMulticanal();
-const server=criarServidorApi({
- central,
- authenticate:async()=>null,
- allowedOrigins:["https://forte-atende-homologacao.onrender.com"]
+const registryEnabled = process.env.FORTE_ATENDE_PLUGIN_REGISTRY === "on";
+const hospedagem = registryEnabled
+  ? criarIntegracaoOperacional({
+      url:process.env.FORTE_ATENDE_SUPABASE_URL,
+      publishableKey:process.env.FORTE_ATENDE_SUPABASE_PUBLISHABLE_KEY
+    })
+  : {central:new CentralMulticanal(),authenticate:async()=>null};
+
+const server = criarServidorApi({
+  ...hospedagem,
+  pluginsOnly:true,
+  registryEnabled,
+  allowedOrigins:["https://forte-atende-homologacao.onrender.com"]
 });
-const port=Number(process.env.PORT||10000);
+const port = Number(process.env.PORT || 10000);
 server.listen(port,"0.0.0.0",()=>{
- console.log("FORTE ATENDE API em homologacao: porta "+port+"; operacoes privadas bloqueadas");
+  console.log("FORTE ATENDE API em homologação");
 });

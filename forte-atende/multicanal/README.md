@@ -70,3 +70,19 @@ Status: código-fonte de programação/homologação. NÃO significa que integra
 - https://learn.microsoft.com/graph/api/user-sendmail?view=graph-rest-1.0
 - https://developers.facebook.com/documentation/business-messaging/whatsapp/overview
 - https://imapflow.com/docs/
+
+### Cadastro de plugins no Operacional
+
+O servidor Render usa a sessão Supabase existente da Caixa Real e consulta o mesmo acesso ao
+módulo de vendas. A migração `20261122130000_forte_atende_plugin_registros.sql` cria apenas o
+cadastro pendente com políticas de leitura pela empresa e escrita por administrador. Um cadastro
+pendente não recebe token, senha nem flags de envio ou recebimento.
+
+No serviço `forte-atende-api-homologacao`, configure `FORTE_ATENDE_SUPABASE_URL`,
+`FORTE_ATENDE_SUPABASE_PUBLISHABLE_KEY` e `FORTE_ATENDE_PLUGIN_REGISTRY=on` depois de aplicar
+a migração no projeto autorizado. A chave é a publicável do mesmo projeto usado no login CPF.
+Para desativar o cadastro, remova `FORTE_ATENDE_PLUGIN_REGISTRY`. O servidor mantém as rotas
+de envio fora deste serviço e a autorização dos provedores continua indisponível.
+
+Rode `node --test forte-atende/plugins/*.test.mjs` para verificar o fluxo HTTP usando um
+Operacional simulado, incluindo isolamento, duplicatas, sessão inválida e bloqueio de ativação.

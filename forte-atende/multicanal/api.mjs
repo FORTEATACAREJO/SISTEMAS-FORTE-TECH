@@ -24,7 +24,7 @@ const sanitize=({secretRef,...data})=>data;
  * injeta authenticate(req) verificando a sessao de servidor (nao headers tenant).
  * Regras de negocio estao em CentralMulticanal. Nao chama listen automaticamente.
  */
-export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWebhook=null,pluginManager=null,atendimento=new AtendimentoCompartilhado()}={}){
+export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWebhook=null,pluginManager=null,pluginsOnly=false,registryEnabled,atendimento=new AtendimentoCompartilhado()}={}){
  if(!central||typeof authenticate!=="function")throw Error("Autenticador de sessão obrigatório");
  const plugins=pluginManager??new GerenciadorPlugins({central});
  const origins=new Set(allowedOrigins);
@@ -38,6 +38,8 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
      }
      const url=new URL(req.url||"/","https://local.invalid");
      if(url.pathname==="/health"&&req.method==="GET")return response(res,200,{service:"forte-atende-multicanal",status:"api-source"});
+     if(url.pathname==="/api/plugins/status"&&req.method==="GET"&&typeof registryEnabled==="boolean")
+       return response(res,200,{registryEnabled,providerAuthorizationEnabled:false});
      if(url.pathname==="/webhooks/meta"&&req.method==="POST"){
        if(typeof metaWebhook!=="function")return response(res,503,{error:"Webhook não configurado"});
        // metaWebhook obrigatoriamente verifica X-Hub-Signature-256 e body bruto.
@@ -45,9 +47,11 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
        const result=await metaWebhook(raw,String(req.headers["x-hub-signature-256"]||""));
        return response(res,200,{received:true,added:result?.added??0});
      }
+     if(pluginsOnly && url.pathname!=="/api/plugins" && !url.pathname.startsWith("/api/plugins/"))return response(res,404,{error:"Não encontrado"});
      if(!url.pathname.startsWith("/api/"))return response(res,404,{error:"Não encontrado"});
      if(req.headers.authorization?.startsWith("Bearer ")!==true)return response(res,401,{error:"Sessão obrigatória"});
      const actor=await authenticate(req);
+     if(actor?.forbidden)return response(res,403,{error:"Acesso não autorizado"});
      if(!actor?.tenantId||!actor?.userId||!actor?.role)return response(res,401,{error:"Sessão inválida"});
      const body=req.method==="POST"?JSON.parse((await readBody(req)).toString("utf8")||"{}"):{};
      if(req.method==="GET"&&url.pathname==="/api/atendimento/conversas")return response(res,200,{conversas:atendimento.listar(actor),resumo:atendimento.resumo(actor)});
@@ -55,7 +59,7 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
      if(req.method==="POST"&&url.pathname==="/api/atendimento/exclusoes/restaurar"){if(body.confirmar!==true)return response(res,400,{error:"Confirmação obrigatória"});return response(res,200,{resultado:atendimento.recuperarExclusao(actor,body)});}
      if(req.method==="GET"&&url.pathname==="/api/atendimento/resumo")return response(res,200,atendimento.resumo(actor));
      if(req.method==="GET"&&url.pathname==="/api/provedores")return response(res,200,{providers:listarProvedores()});
-     if(req.method==="GET"&&url.pathname==="/api/plugins")return response(res,200,{plugins:plugins.catalogo(actor,{canal:url.searchParams.get("canal")||undefined})});
+     if(req.method==="GET"&&url.pathname==="/api/plugins")return response(res,200,{plugins:await plugins.catalogo(actor,{canal:url.searchParams.get("canal")||undefined})});
      if(req.method==="GET"&&url.pathname==="/api/conexoes")return response(res,200,{connections:central.conexoes(actor)});
      if(req.method==="GET"&&url.pathname==="/api/mensagens"){
        return response(res,200,{messages:central.caixaEntrada(actor,{connectionId:url.searchParams.get("connectionId")||undefined,limit:Number(url.searchParams.get("limit"))||50})});
@@ -77,7 +81,7 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
        return response(res,200,{resultado});
      }
      if(req.method==="POST"&&url.pathname==="/api/plugins/instalar")
-       return response(res,201,{connection:plugins.instalar(actor,body)});
+       return response(res,201,{connection:await plugins.instalar(actor,body)});
      const pluginOauth=url.pathname.match(/^\/api\/plugins\/conexoes\/([a-zA-Z0-9_-]+)\/autorizar$/);
      if(req.method==="POST"&&pluginOauth)
        return response(res,200,{authorization:await plugins.prepararAutorizacao(actor,pluginOauth[1])});
@@ -104,12 +108,13 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
    }catch(e){
      // Falhas sem propagar tokens, URLs de segredo ou headers do provedor.
      const message=String(e?.message||"Falha");
+     const conflict=/já conectado/.test(message);
      const unauthorized=/não autorizado|outra empresa/.test(message);
      const uncertain=/Envio incerto/.test(message);
-     const status=unauthorized?403:uncertain?502:
-       /indisponível|não instalado|Cofre|conector/i.test(message)?503:400;
+     const status=conflict?409:unauthorized?403:uncertain?502:
+       /indisponível|não instalado|não configurad[oa]|Cofre|conector/i.test(message)?503:400;
      return response(res,status,{error:uncertain?"Resultado incerto: verificar no provedor antes de tentar novamente":
-       unauthorized?"Acesso não autorizado":status===503?"Integração indisponível":"Operação recusada"});
+       conflict?"Essa conta já está cadastrada":unauthorized?"Acesso não autorizado":status===503?"Integração indisponível":"Operação recusada"});
    }
  });
 }

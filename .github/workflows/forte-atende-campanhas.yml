@@ -16,4 +16,4 @@ jobs:
         with:
           node-version: "24"
       - name: Testar preparacao de campanhas
-        run: node --test forte-atende/campanhas/core.test.mjs forte-atende/config/canais.test.mjs forte-atende/email/roteamento.test.mjs forte-atende/multicanal/multicanal.test.mjs forte-atende/multicanal/api.test.mjs forte-atende/plugins/plugins.test.mjs
+        run: node --test forte-atende/campanhas/core.test.mjs forte-atende/config/canais.test.mjs forte-atende/email/roteamento.test.mjs forte-atende/multicanal/multicanal.test.mjs forte-atende/multicanal/api.test.mjs forte-atende/plugins/*.test.mjs

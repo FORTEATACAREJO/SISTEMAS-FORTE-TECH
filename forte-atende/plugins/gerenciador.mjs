@@ -12,10 +12,10 @@ export class GerenciadorPlugins {
     this.central=central;
     this.oauthBroker=oauthBroker;
   }
-  catalogo(actor,{canal}={}){
+  async catalogo(actor,{canal}={}){
     // Validar assinatura/sessao pelo host ANTES de chamar este método;
     // central.conexoes ainda valida vinculo e perfil do actor.
-    const minhas=this.central.conexoes(actor);
+    const minhas=await this.central.conexoes(actor);
     return listarPlugins({canal}).map(p=>({
       ...p,
       conexoes:minhas.filter(c=>c.provider===p.provider).map(c=>({
@@ -25,7 +25,7 @@ export class GerenciadorPlugins {
       }))
     }));
   }
-  instalar(actor,{pluginId,identity,externalAccountId="",displayName="",forwardedAliases=[]}={}){
+  async instalar(actor,{pluginId,identity,externalAccountId="",displayName="",forwardedAliases=[]}={}){
     if(!["master","admin"].includes(actor?.role))throw Error("Acesso não autorizado");
     const p=obterPlugin(pluginId);
     if(!p)throw Error("Plugin não encontrado");
@@ -33,7 +33,7 @@ export class GerenciadorPlugins {
     const id=randomUUID();
     // Caminho opaco: quem cria a credencial e o host, com vault e RBAC.
     const secretRef="forte-atende/"+actor.tenantId+"/"+id;
-    const c=this.central.registrar(actor,{
+    const c=await this.central.registrar(actor,{
       id,provider:p.provider,identity,
       externalAccountId,secretRef,settings:{displayName,forwardedAliases}
     });
@@ -43,7 +43,7 @@ export class GerenciadorPlugins {
   }
   async prepararAutorizacao(actor,connectionId){
     if(!["master","admin"].includes(actor?.role))throw Error("Acesso não autorizado");
-    const c=this.central.store.getConnection(actor.tenantId,connectionId);
+    const c=await this.central.store.getConnection(actor.tenantId,connectionId,actor);
     if(!c)throw Error("Conexão não encontrada");
     const p=listarPlugins().find(x=>x.provider===c.provider);
     if(!p)throw Error("Plugin não reconhecido");

@@ -90,6 +90,7 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
   <div class="header-inner">
     <img src="./icons/forte-atende-192.png" width="48" height="48" alt="">
     <div class="app-title"><h1>FORTE ATENDE</h1><p>Central de atendimento</p></div>
+    <a id="integracoesLink" href="./integracoes.html" hidden style="color:inherit">Integrações</a>
     <button id="sair" type="button" hidden>Sair</button>
   </div>
 </header>
@@ -490,6 +491,7 @@ async function load() {
   $("login").style.display = session ? "none" : "block";
   $("inbox").style.display = session ? "block" : "none";
   $("sair").hidden = !session;
+  $("integracoesLink").hidden = !session;
   if (session) await exclusive(async () => {
     await showList(true, null, loadExclusions().catch(() => {}));
   }, $("status"));

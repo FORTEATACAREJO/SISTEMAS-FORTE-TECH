@@ -51,7 +51,8 @@ footer{margin-top:22px;color:#758a95;font-size:12px}
 </style></head><body>
 <header><nav><div class="brand">FORTE ATENDE<small>PLUGINS & INTEGRAÇÕES</small></div><a class="back" href="./painel.html">← Voltar ao painel</a></nav></header>
 <main><div class="titlebar"><div><h1>Conectar canais e aplicativos</h1><p class="muted">Adicione quantas contas forem necessárias, com dados separados por empresa.</p></div><span class="tag warn" id="generalStatus">Ambiente de homologação</span></div>
-<div class="notice"><strong>Conexões protegidas:</strong> as contas precisam ser autorizadas pelo titular e verificadas no servidor. Esta visualização não recolhe senhas, códigos OAuth ou tokens. Sem backend autenticado, serve como prévia de instalação dos plugins.</div>
+<div class="notice"><strong>Conexões protegidas:</strong> as contas precisam ser autorizadas pelo titular e verificadas no servidor. Esta visualização não recolhe senhas, códigos OAuth ou tokens. Entre pelo FORTE OPERACIONAL para consultar os cadastros quando o ambiente estiver habilitado.</div>
+<p id="apiStatus" class="summary" role="status"></p>
 <div class="tabs" role="group" aria-label="Filtrar plugins"><button class="tab" data-filter="all" aria-pressed="true">Todos</button><button class="tab" data-filter="email" aria-pressed="false">E-mails</button><button class="tab" data-filter="whatsapp" aria-pressed="false">WhatsApp Business</button></div>
 <div class="grid" id="plugins"></div><p class="summary" id="count"></p>
 <footer>Conectores oficiais e protocolos autorizados • Sem envio automático de mensagens • LGPD e isolamento por empresa</footer>
@@ -64,7 +65,7 @@ footer{margin-top:22px;color:#758a95;font-size:12px}
 <div class="status" id="dialogStatus" aria-live="polite">Esta conexão será criada inicialmente como pendente. Nenhuma mensagem será enviada.</div>
 <div class="actions"><button class="primary" id="install" type="submit">Preparar conexão</button><button type="button" class="secondary" id="cancel">Cancelar</button></div></form>
 </div></div>
-<script>
+<script type="module">
 (()=>{
 'use strict';
 const PLUGINS=[
@@ -75,7 +76,42 @@ const PLUGINS=[
 {id:'whatsapp-parceiro',name:'WhatsApp por parceiro oficial',provider:'whatsapp-bsp',channel:'whatsapp',icon:'▦',family:'BSP oficial',auth:'provedor-autorizado',features:['Receber','Responder','Enviar'],details:'Ponto de extensão para empresas que utilizem BSPs oficiais do WhatsApp.',needs:['Escolher parceiro oficial','Habilitar adaptador específico da API','Validar número e webhook autorizado'],notReady:true}
 ];
 const $=id=>document.getElementById(id);let active=null,filter='all';
-const client=window.FORTE_ATENDE_PLUGIN_CLIENT??null;
+const api = "https://forte-atende-api-homologacao.onrender.com";
+let client = null;
+let connections = new Map();
+async function loadRegistry() {
+ const status = await fetch(api+"/api/plugins/status",{cache:"no-store",signal:AbortSignal.timeout(8000)});
+ if (!status.ok) throw Error("Catálogo temporariamente indisponível.");
+ if (!(await status.json()).registryEnabled) {
+   $("apiStatus").textContent = "Cadastro de conexões desativado neste ambiente.";
+   return;
+ }
+ const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.57.4");
+ const db = createClient("https://gtwecfyffjszghnvtlzr.supabase.co","sb_publishable_RP8g0VoZdWh8e9R7Nb9mYw_GSXjSuD3");
+ const request = async (path, body) => {
+   const { data:{session} } = await db.auth.getSession();
+   if (!session) throw Error("Entre na central do FORTE ATENDE para acessar os cadastros.");
+   const response = await fetch(api+path,{
+     method:body?"POST":"GET",cache:"no-store",signal:AbortSignal.timeout(10000),
+     headers:{Authorization:"Bearer "+session.access_token,...(body?{"Content-Type":"application/json"}:{})},
+     body:body?JSON.stringify(body):undefined
+   });
+   if (response.status===401) throw Error("Sessão expirada. Entre novamente no FORTE ATENDE.");
+   if (response.status===403) throw Error("Seu perfil não tem permissão para esta operação.");
+   if (response.status===409) throw Error("Essa conta já está cadastrada.");
+   if (response.status===400) throw Error("Confira os dados preenchidos.");
+   if (!response.ok) throw Error("Cadastro temporariamente indisponível.");
+   return response.json();
+ };
+ const refresh = async () => {
+   const {plugins} = await request("/api/plugins");
+   connections = new Map(plugins.map(plugin=>[plugin.id,plugin.conexoes]));
+   render();
+ };
+ await refresh();
+ client = {installPlugin:body=>request("/api/plugins/instalar",body),refresh};
+ $("apiStatus").textContent = "O cadastro fica pendente até a autorização do provedor.";
+}
 function close(){ $('overlay').classList.remove('open');$('installForm').reset();active=null; }
 function open(id){
  active=PLUGINS.find(x=>x.id===id);if(!active)return;
@@ -86,10 +122,10 @@ function open(id){
  $('identity').placeholder=active.channel==='whatsapp'?'+5564999172700':'usuario@empresa.com.br';
  $('phoneIdContainer').hidden=active.id!=='whatsapp-business';
  $('phoneId').required=active.id==='whatsapp-business';
- $('install').disabled=Boolean(active.notReady);
+ $('install').disabled=Boolean(active.notReady)||!client;
  $('dialogStatus').textContent=active.notReady?'Este parceiro precisa de um adaptador específico antes da instalação.':
    client?'A conexão será cadastrada como pendente e precisará de autorização no servidor.':
-   'Prévia apenas: o backend de instalação ainda não está publicado. Não insira senhas nem tokens.';
+   'Cadastro indisponível. Confira o aviso no catálogo.';
  $('overlay').classList.add('open');$('identity').focus();
 }
 function render(){
@@ -107,8 +143,15 @@ function render(){
    const features=document.createElement('div');features.className='features';
    p.features.forEach(t=>{const chip=document.createElement('span');chip.className='feature';chip.textContent=t;features.append(chip);});
    const actions=document.createElement('div');actions.className='actions';
-   const btn=document.createElement('button');btn.className='primary';btn.textContent=p.notReady?'Ver requisitos':'Configurar';btn.addEventListener('click',()=>open(p.id));
-   actions.append(btn);card.append(top,head,family,description,features,actions);$('plugins').append(card);
+   const btn=document.createElement('button');btn.className='primary';btn.textContent=p.notReady||!client?'Ver requisitos':'Configurar';btn.addEventListener('click',()=>open(p.id));
+   actions.append(btn);card.append(top,head,family,description,features);
+   for (const connection of connections.get(p.id)??[]) {
+     const item=document.createElement("p");
+     item.className="summary";
+     item.textContent=connection.identity+" · Pendente";
+     card.append(item);
+   }
+   card.append(actions);$('plugins').append(card);
  }
  $('count').textContent=filtered.length+' plugin(s) disponíveis no catálogo. O funcionamento real depende de configurar cada conta.';
 }
@@ -127,13 +170,19 @@ $('installForm').addEventListener('submit',async e=>{
  }
  $('install').disabled=true;$('dialogStatus').textContent='Cadastrando conexão pendente…';
  try{
-   const res=await client.installPlugin({pluginId:active.id,identity,externalAccountId});
+   const current=active;
+   const res=await client.installPlugin({pluginId:current.id,identity,externalAccountId});
+   await client.refresh().catch(()=>{ $("apiStatus").textContent="Cadastro salvo. Atualize a página para consultar a lista."; });
+   if(active!==current)return;
    const id=res?.connection?.id??res?.id??'';
    $('dialogStatus').textContent=id?'Conexão pendente criada. Próximo passo: autorização oficial da conta ('+id+').':
      'Solicitação recebida. Valide o status no servidor antes de operar.';
- }catch{ $('dialogStatus').textContent='Não foi possível registrar a conexão. Revise a autorização no servidor.'; }
+ }catch(error){ $('dialogStatus').textContent=error.message||'Não foi possível registrar a conexão.'; }
  finally{$('install').disabled=false;}
 });
 render();
+loadRegistry().then(render).catch(error=>{
+ $("apiStatus").textContent=error.message||"Catálogo temporariamente indisponível.";
+});
 })();
 </script></body></html>

@@ -26,32 +26,32 @@ test("cinco plugins nativos possuem metadados e provedores reais",()=>{
  assert.equal(listarPlugins({canal:"whatsapp"}).length,2);
  assert.equal(obterPlugin("nao-existe"),null);
 });
-test("instalacao cria conexao pendente, sem segredos, e permite multiplas caixas",()=>{
+test("instalacao cria conexao pendente, sem segredos, e permite multiplas caixas",async()=>{
  const c=central(),p=new GerenciadorPlugins({central:c});
- const a=p.instalar(actor(),{pluginId:"gmail",identity:"compras@example.com",displayName:"Compras"});
- const b=p.instalar(actor(),{pluginId:"gmail",identity:"gerencia@example.com",displayName:"Gerência"});
+ const a=await p.instalar(actor(),{pluginId:"gmail",identity:"compras@example.com",displayName:"Compras"});
+ const b=await p.instalar(actor(),{pluginId:"gmail",identity:"gerencia@example.com",displayName:"Gerência"});
  assert.equal(a.status,"pending");
  assert.equal(a.sendEnabled,false);
  assert.equal(a.receiveEnabled,false);
  assert.equal(Object.hasOwn(a,"secretRef"),false);
- const listed=p.catalogo(actor()).find(x=>x.id==="gmail").conexoes;
+ const listed=(await p.catalogo(actor())).find(x=>x.id==="gmail").conexoes;
  assert.equal(listed.length,2);
  assert.equal(Object.hasOwn(listed[0],"secretRef"),false);
  assert.equal(b.identity,"gerencia@example.com");
- assert.throws(()=>p.instalar(actor(),{pluginId:"gmail",identity:"compras@example.com"}),/já conectada/);
+ await assert.rejects(()=>p.instalar(actor(),{pluginId:"gmail",identity:"compras@example.com"}),/já conectada/);
 });
-test("acesso por empresa e perfis evita contas de outro tenant",()=>{
+test("acesso por empresa e perfis evita contas de outro tenant",async()=>{
  const p=new GerenciadorPlugins({central:central()});
- p.instalar(actor("empresa1"),{pluginId:"gmail",identity:"empresa1@example.com"});
- p.instalar(actor("empresa2"),{pluginId:"gmail",identity:"empresa2@example.com"});
- assert.deepEqual(p.catalogo(actor("empresa1")).find(x=>x.id==="gmail").conexoes.map(x=>x.identity),["empresa1@example.com"]);
- assert.throws(()=>p.instalar(actor("empresa1","atendente"),{pluginId:"gmail",identity:"x@example.com"}),/não autorizado/);
- assert.throws(()=>p.instalar(actor(),{pluginId:"whatsapp-parceiro",identity:"+5564999172700"}),/depende do adaptador/);
- assert.throws(()=>p.instalar(actor(),{pluginId:"desconhecido",identity:"x@example.com"}),/não encontrado/);
+ await p.instalar(actor("empresa1"),{pluginId:"gmail",identity:"empresa1@example.com"});
+ await p.instalar(actor("empresa2"),{pluginId:"gmail",identity:"empresa2@example.com"});
+ assert.deepEqual((await p.catalogo(actor("empresa1"))).find(x=>x.id==="gmail").conexoes.map(x=>x.identity),["empresa1@example.com"]);
+ await assert.rejects(()=>p.instalar(actor("empresa1","atendente"),{pluginId:"gmail",identity:"x@example.com"}),/não autorizado/);
+ await assert.rejects(()=>p.instalar(actor(),{pluginId:"whatsapp-parceiro",identity:"+5564999172700"}),/depende do adaptador/);
+ await assert.rejects(()=>p.instalar(actor(),{pluginId:"desconhecido",identity:"x@example.com"}),/não encontrado/);
 });
 test("OAuth falha fechado sem broker de autenticação",async()=>{
  const p=new GerenciadorPlugins({central:central()});
- const installed=p.instalar(actor(),{pluginId:"gmail",identity:"a@example.com"});
+ const installed=await p.instalar(actor(),{pluginId:"gmail",identity:"a@example.com"});
  await assert.rejects(()=>p.prepararAutorizacao(actor(),installed.id),/OAuth não configurado/);
 });
 test("OAuth usa URL de Google/Microsoft autorizada e rejeita sites externos",async()=>{
@@ -62,18 +62,18 @@ test("OAuth usa URL de Google/Microsoft autorizada e rejeita sites externos",asy
      "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize?response_type=code&state=estado-simulado"
  })};
  const p=new GerenciadorPlugins({central:c,oauthBroker:broker});
- const g=p.instalar(actor(),{pluginId:"gmail",identity:"a@example.com"});
+ const g=await p.instalar(actor(),{pluginId:"gmail",identity:"a@example.com"});
  assert.equal((await p.prepararAutorizacao(actor(),g.id)).status,"aguardando_autorizacao_usuario");
- const m=p.instalar(actor(),{pluginId:"microsoft365",identity:"b@example.com"});
+ const m=await p.instalar(actor(),{pluginId:"microsoft365",identity:"b@example.com"});
  assert.match((await p.prepararAutorizacao(actor(),m.id)).authorizationUrl,/login\.microsoftonline\.com/);
- const wa=p.instalar(actor(),{pluginId:"whatsapp-business",identity:"+5564999172700",externalAccountId:"1278417945364665"});
+ const wa=await p.instalar(actor(),{pluginId:"whatsapp-business",identity:"+5564999172700",externalAccountId:"1278417945364665"});
  assert.equal((await p.prepararAutorizacao(actor(),wa.id)).status,"aguardando_credencial_no_backend");
  p.oauthBroker={iniciar:async()=>({authorizationUrl:"https://sistema-falso.example/autorizar"})};
  await assert.rejects(()=>p.prepararAutorizacao(actor(),g.id),/não confiável/);
 });
 test("verificar só ativa conexão com resposta autenticada do provedor",async()=>{
  const p=new GerenciadorPlugins({central:central()});
- const c=p.instalar(actor(),{pluginId:"gmail",identity:"a@example.com"});
+ const c=await p.instalar(actor(),{pluginId:"gmail",identity:"a@example.com"});
  const check=await p.verificar(actor(),c.id,{permitirEnvio:true,permitirRecebimento:true});
  assert.equal(check.status,"verified");
  assert.equal(check.sendEnabled,true);
@@ -95,7 +95,7 @@ test("rotas /api/plugins exigem sessao e nao expõem referências de segredo",as
    const data=await res.json();
    assert.equal(data.connection.status,"pending");
    assert.equal(Object.hasOwn(data.connection,"secretRef"),false);
-   assert.equal(p.catalogo(actor()).find(x=>x.id==="gmail").conexoes[0].identity,"contato@example.com");
+   assert.equal((await p.catalogo(actor())).find(x=>x.id==="gmail").conexoes[0].identity,"contato@example.com");
    const bad=await fetch(base+"/api/plugins/instalar",{method:"POST",headers,
      body:JSON.stringify({pluginId:"nao-existe",identity:"teste@example.com"})});
    assert.equal(bad.status,400);
