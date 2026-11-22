@@ -95,8 +95,42 @@ Deno.serve(async req => {
     if (raw.length > 80000) return json({ error: "Requisição muito grande." }, 413);
     let body;
     try { body = JSON.parse(raw); } catch { return json({ error: "Requisição inválida." }, 400); }
-    if (!["LIST", "OPEN", "REPLY", "EXCLUSIONS", "EXCLUDE", "RESTORE"].includes(body?.action)) {
+    if (!["LIST", "OPEN", "REPLY", "EXCLUSIONS", "EXCLUDE", "RESTORE", "CLIENT_SEARCH", "CLIENT_WHATSAPP", "CLIENT_EMAILS"].includes(body?.action)) {
       return json({ error: "Ação inválida." }, 400);
+    }
+
+    let customer;
+    if (body.action.startsWith("CLIENT_")) {
+      const query = typeof body.query === "string" ? body.query.trim() : "";
+      const lookup = body.action !== "CLIENT_SEARCH";
+      const id = lookup && typeof body.customerId === "string" ? body.customerId : null;
+      if (lookup ? !id || id.length > 160 : query.length < 2 || query.length > 120) {
+        return json({ error: "Informe um nome ou contato válido para buscar." }, 400);
+      }
+      const { data, error } = await db.rpc("forte_atende_buscar_clientes", {
+        p_empresa: profile.empresa_id, p_busca: query, p_cliente: id
+      });
+      if (error) throw problem(503, "Não foi possível consultar os clientes do FORTE OPERACIONAL.");
+      if (!lookup) return json({ items: data.slice(0, 30), more: data.length > 30 });
+      if (data.length !== 1) return json({ error: "Cadastro indisponível. Faça a busca novamente." }, 404);
+      customer = data[0];
+
+      if (body.action === "CLIENT_WHATSAPP") {
+        const number = customer.whatsapp || customer.telefone;
+        const normalizePhone = value => {
+          const raw = String(value || "").trim();
+          const digits = raw.replace(/\D/g, "");
+          return !raw.startsWith("+") && /^\d{10,11}$/.test(digits) ? "55" + digits : digits;
+        };
+        const phone = normalizePhone(number);
+        if (!/^\d{8,15}$/.test(phone)) return json({ error: "Este cadastro não tem um número válido." }, 422);
+        const { data: row, error } = await db.from("whatsapp_inbox_state").select("threads:estado->whatsappInboxThreads")
+          .eq("empresa_id", profile.empresa_id).maybeSingle();
+        if (error) throw problem(503, "Não foi possível consultar as conversas de WhatsApp.");
+        const threads = (row?.threads || []).filter(thread => normalizePhone(thread.phone) === phone);
+        return json({ threads: threads.map(thread => ({ id: thread.id, name: thread.name, phone: thread.phone })) });
+      }
+      if (!emailPattern.test(customer.email)) return json({ error: "Este cadastro não tem um e-mail válido." }, 422);
     }
 
     const exclusions = () => db.from("forte_atende_exclusoes");
@@ -157,6 +191,12 @@ Deno.serve(async req => {
     if (!mailbox?.resourceId) return json({ error: "A credencial não tem acesso à caixa Contato." }, 503);
     const base = "/mailboxes/" + encodeURIComponent(mailbox.resourceId);
     const inbox = base + "/folders/INBOX/messages";
+    if (body.action === "CLIENT_EMAILS") {
+      const expected = customer.email.toLowerCase();
+      const result = await provider(inbox + "/search?perPage=25&sort=-uid", token, { from: customer.email });
+      const matches = result.data.filter(message => message.from?.address?.trim().toLowerCase() === expected);
+      return json({ items: matches.map(summary) });
+    }
     if (body.action === "LIST") {
       const page = Math.max(1, Math.min(1000, Math.trunc(Number(body.page) || 1)));
       const result = await provider(inbox + "?perPage=25&sort=-uid&page=" + page, token);

@@ -31,7 +31,7 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
 #login form{margin-top:20px}
 #entrar{width:100%}
 #inbox{display:none}
-.channels{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px;margin-bottom:14px}
+.channels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
 .channel{font-weight:650;background:#fff;color:var(--muted);border-color:var(--line)}
 .channel[aria-pressed="true"]{background:#d9f4ed;color:#075b51;border-color:#85c5b7}
 .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;border-bottom:1px solid var(--line)}
@@ -65,6 +65,14 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
 .exclusion-row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}
 .exclusion-row>div{min-width:0;overflow-wrap:anywhere}
 @media(max-width:420px){.channel{padding-inline:6px;font-size:.86rem}}
+.customer-form{display:flex;align-items:flex-end;gap:10px}
+.customer-form label{flex:1;min-width:0}
+.customer-form input{margin-bottom:0}
+.customer-row{padding:13px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.customer-row h3{font-size:1rem}
+.customer-row p{margin-top:4px}
+.customer-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+@media(max-width:540px){.channels{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -92,6 +100,7 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
     <nav class="channels" aria-label="Canais">
       <button id="tabWhatsApp" class="channel" type="button" aria-pressed="true" aria-controls="whatsapp">WhatsApp</button>
       <button id="tabEmail" class="channel" type="button" aria-pressed="false" aria-controls="email">E-mail</button>
+      <button id="tabClientes" class="channel" type="button" aria-pressed="false" aria-controls="clientes">Clientes</button>
       <button id="tabExclusoes" class="channel" type="button" aria-pressed="false" aria-controls="exclusoes">Caixa de Exclusões</button>
     </nav>
     <section id="whatsapp" class="card" aria-labelledby="waTitle">
@@ -149,6 +158,20 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
         </section>
       </div>
     </section>
+    <section id="clientes" class="card" aria-labelledby="clientesTitle" hidden>
+      <header class="panel-head"><div><h2 id="clientesTitle">Clientes</h2><p>Cadastro do FORTE OPERACIONAL</p></div></header>
+      <div class="panel-body">
+        <form id="buscarClientes" class="customer-form">
+          <label for="buscaCliente">Nome ou contato
+            <input id="buscaCliente" type="search" minlength="2" maxlength="120" placeholder="Nome, WhatsApp ou e-mail" required>
+          </label>
+          <button id="pesquisarCliente" type="submit">Buscar</button>
+        </form>
+        <p id="clientesStatus" class="status" role="status"></p>
+        <div id="clientesLista"></div>
+        <div id="clientesConversas"></div>
+      </div>
+    </section>
     <section id="exclusoes" class="card" aria-labelledby="exclusoesTitle" hidden>
       <header class="panel-head"><h2 id="exclusoesTitle">Caixa de Exclusões</h2><button id="exclusoesAtualizar" class="quiet" type="button">Atualizar</button></header>
       <div class="panel-body">
@@ -198,7 +221,7 @@ let pending = null;
 let exclusions = new Map();
 let exclusionActor = "";
 const readRequests = new Map();
-const controls = ["atualizar", "sair", "enviar", "mais", "voltar", "emailEnviar", "emailAtualizar", "emailMais", "emailVoltar", "tabWhatsApp", "tabEmail", "tabExclusoes", "exclusoesAtualizar", "emailExcluir"];
+const controls = ["atualizar", "sair", "enviar", "mais", "voltar", "emailEnviar", "emailAtualizar", "emailMais", "emailVoltar", "tabWhatsApp", "tabEmail", "tabClientes", "tabExclusoes", "pesquisarCliente", "exclusoesAtualizar", "emailExcluir"];
 
 async function exclusive(task, status) {
   if (busy) return;
@@ -558,8 +581,12 @@ async function listEmail(page = 1) {
   $("emailStatus").textContent = list.children.length + " e-mail(s) exibidos";
 }
 
-async function openEmail(uid) {
+async function openEmail(uid, expected = null) {
   const message = await callEmail("OPEN", { uid });
+  if (expected && ((expected.messageId && expected.messageId !== message.messageId) ||
+      expected.from?.toLowerCase() !== message.from?.toLowerCase())) {
+    throw Error("A mensagem mudou na caixa. Faça a busca novamente.");
+  }
   emailMessage = message;
   $("emailLista").hidden = true;
   $("emailMais").hidden = true;
@@ -579,10 +606,93 @@ function selectChannel(channel) {
   $("whatsapp").hidden = channel !== "whatsapp";
   $("email").hidden = channel !== "email";
   $("exclusoes").hidden = channel !== "exclusoes";
+  $("clientes").hidden = channel !== "clientes";
+  $("tabClientes").setAttribute("aria-pressed", String(channel === "clientes"));
   $("tabWhatsApp").setAttribute("aria-pressed", String(channel === "whatsapp"));
   $("tabEmail").setAttribute("aria-pressed", String(channel === "email"));
   $("tabExclusoes").setAttribute("aria-pressed", String(channel === "exclusoes"));
 }
+function customerButton(label, callback) {
+  const button = t("button", label);
+  button.type = "button";
+  button.className = "quiet";
+  button.onclick = callback;
+  return button;
+}
+
+async function customerConversation(customer, channel) {
+  const status = $("clientesStatus");
+  const list = $("clientesConversas");
+  list.replaceChildren();
+  status.textContent = "Buscando o histórico do cliente...";
+  const id = { customerId: customer.id };
+  if (channel === "whatsapp") {
+    const { threads } = await callEmail("CLIENT_WHATSAPP", id);
+    if (!threads.length) {
+      status.textContent = "Ainda não há conversa nesse número na caixa de WhatsApp.";
+      return;
+    }
+    if (threads.length === 1) {
+      await openThread(threads[0]);
+      selectChannel("whatsapp");
+      status.textContent = "";
+      return;
+    }
+    status.textContent = "Há mais de uma conversa para esse número. Abra a que você deseja consultar na aba WhatsApp.";
+    return;
+  }
+
+  const { items } = await callEmail("CLIENT_EMAILS", id);
+  const visible = items.filter(item => !exclusions.has(exclusionKey("email", item.uid + ":" + item.messageId)));
+  status.textContent = visible.length ? "E-mails recebidos deste endereço" : "Nenhum e-mail desse endereço na caixa Contato.";
+  for (const message of visible) {
+    const button = conversationRow(message.subject || "(Sem assunto)", message.from, message.date);
+    button.onclick = () => exclusive(async () => {
+      await openEmail(message.uid, message);
+      selectChannel("email");
+    }, status);
+    list.append(button);
+  }
+}
+
+$("tabClientes").onclick = () => selectChannel("clientes");
+$("buscarClientes").addEventListener("submit", event => {
+  event.preventDefault();
+  const query = $("buscaCliente").value.trim();
+  const status = $("clientesStatus");
+  if (query.length < 2) {
+    status.textContent = "Digite pelo menos dois caracteres.";
+    return;
+  }
+  void exclusive(async () => {
+    status.textContent = "Buscando no FORTE OPERACIONAL...";
+    const list = $("clientesLista");
+    list.replaceChildren();
+    $("clientesConversas").replaceChildren();
+    const { items, more } = await callEmail("CLIENT_SEARCH", { query });
+    for (const customer of items) {
+      const row = t("article", "");
+      row.className = "customer-row";
+      const title = customer.nome || customer.razao_social || customer.fantasia || "Cliente";
+      const company = [customer.razao_social, customer.fantasia].filter((name, index, names) => name && name !== title && names.indexOf(name) === index).join(" · ");
+      row.append(t("h3", title), t("small", company));
+      if (customer.whatsapp) row.append(t("p", "WhatsApp · " + customer.whatsapp));
+      if (customer.telefone && customer.telefone !== customer.whatsapp) row.append(t("p", "Telefone · " + customer.telefone));
+      if (customer.email) row.append(t("p", "E-mail · " + customer.email));
+      const actions = t("div", "");
+      actions.className = "customer-actions";
+      if (customer.whatsapp || customer.telefone) actions.append(customerButton("Abrir WhatsApp", () => exclusive(() => customerConversation(customer, "whatsapp"), status)));
+      if (customer.email) actions.append(customerButton("Ver e-mails", () => exclusive(() => customerConversation(customer, "email"), status)));
+      if (actions.children.length) row.append(actions);
+      else row.append(t("p", "Contato ainda não informado no FORTE OPERACIONAL."));
+      list.append(row);
+    }
+    status.textContent = !items.length ? "Nenhum cliente encontrado." :
+      more ? "Primeiros 30 resultados. Refine a busca para ver outros clientes." :
+        items.length + (items.length === 1 ? " cliente encontrado" : " clientes encontrados");
+  }, status);
+});
+
 $("tabWhatsApp").onclick = () => {
   selectChannel("whatsapp");
   void refreshWhatsApp();
@@ -668,6 +778,10 @@ $("sair").onclick = () => exclusive(async () => {
   exclusionActor = "";
   $("exclusoesLista").replaceChildren();
   $("exclusoesStatus").textContent = "";
+  $("clientesLista").replaceChildren();
+  $("clientesConversas").replaceChildren();
+  $("clientesStatus").textContent = "";
+  $("buscaCliente").value = "";
   $("buscar").value = "";
   $("semResultados").hidden = true;
   $("sair").hidden = true;
