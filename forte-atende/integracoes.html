@@ -81,13 +81,21 @@ const api = "https://forte-atende-api-homologacao.onrender.com";
 let client = null;
 let connections = new Map();
 let canRegister = false;
+const oauthKey = "forte-atende-oauth";
+const returnedUrl = new URL(location.href);
+const oauthCode = returnedUrl.searchParams.get("code");
+const oauthState = returnedUrl.searchParams.get("state");
+const oauthError = returnedUrl.searchParams.has("error");
+if (oauthCode || oauthState || oauthError) history.replaceState(null,"",returnedUrl.pathname);
 async function loadRegistry() {
  const status = await fetch(api+"/api/plugins/status",{cache:"no-store",signal:AbortSignal.timeout(8000)});
  if (!status.ok) throw Error("Catálogo temporariamente indisponível.");
- const {registryEnabled,providerAuthorizationEnabled,auth} = await status.json();
+ const {registryEnabled,providerAuthorizationEnabled,vaultConfigured,oauthProviders=[],auth} = await status.json();
  $("providerStatus").textContent = providerAuthorizationEnabled
    ? "Autorização de provedores disponível."
-   : "Ativação de Gmail, WhatsApp e outros provedores desativada nesta API.";
+   : vaultConfigured
+     ? "Cofre configurado. A autorização dos provedores aguarda a configuração dos aplicativos."
+     : "Ativação de Gmail, WhatsApp e outros provedores desativada nesta API.";
  if (!registryEnabled) {
    $("apiStatus").textContent = "Cadastro de conexões desativado neste ambiente.";
    return;
@@ -126,10 +134,28 @@ async function loadRegistry() {
    render();
  };
  await refresh();
- client = {installPlugin:body=>request("/api/plugins/instalar",body),refresh};
+ client = {
+   installPlugin:body=>request("/api/plugins/instalar",body),refresh,oauthProviders,
+   async authorize(connection) {
+     const {authorization} = await request("/api/plugins/conexoes/"+encodeURIComponent(connection.id)+"/autorizar",{});
+     const url = new URL(authorization.authorizationUrl);
+     if (url.protocol!=="https:" || !["accounts.google.com","login.microsoftonline.com"].includes(url.hostname))
+       throw Error("Endereço de autorização inválido.");
+     sessionStorage.setItem(oauthKey,JSON.stringify({id:connection.id,state:url.searchParams.get("state")}));
+     location.assign(url.href);
+   }
+ };
  $("apiStatus").textContent = canRegister
    ? "Cadastro de teste disponível. As conexões ficam pendentes."
    : "Consulta disponível. Somente administradores podem cadastrar conexões.";
+ if (oauthCode || oauthState || oauthError) {
+   const pending = JSON.parse(sessionStorage.getItem(oauthKey) || "null");
+   sessionStorage.removeItem(oauthKey);
+   if (oauthError || !oauthCode || !oauthState || pending?.state!==oauthState)
+     throw Error("Autorização interrompida ou sessão inválida. Inicie novamente.");
+   await request("/api/plugins/conexoes/"+encodeURIComponent(pending.id)+"/concluir",{state:oauthState,code:oauthCode});
+   $("apiStatus").textContent = "Autorização guardada no cofre. Envio e recebimento continuam desativados.";
+ }
 }
 function close(){ $('overlay').classList.remove('open');$('installForm').reset();active=null; }
 function open(id){
@@ -171,6 +197,22 @@ function render(){
      item.className="summary";
      item.textContent=connection.identity+" · Pendente";
      card.append(item);
+     if (canRegister && client?.oauthProviders.includes(p.provider)) {
+       const authorize = document.createElement("button");
+       authorize.type = "button";
+       authorize.className = "secondary";
+       authorize.textContent = "Autorizar "+connection.identity;
+       authorize.addEventListener("click",async()=>{
+         authorize.disabled = true;
+         try {
+           await client.authorize(connection);
+         } catch (error) {
+           $("apiStatus").textContent = error.message || "Autorização indisponível.";
+           authorize.disabled = false;
+         }
+       });
+       card.append(authorize);
+     }
    }
    card.append(actions);$('plugins').append(card);
  }

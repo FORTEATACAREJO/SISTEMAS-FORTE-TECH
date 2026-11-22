@@ -17,7 +17,7 @@ function roleOf(grant, profile) {
   return null;
 }
 
-export function criarIntegracaoOperacional({url, publishableKey, fetcher = fetch}) {
+export function criarIntegracaoOperacional({url, publishableKey, vaultGuard, fetcher = fetch}) {
   const origin = new URL(url);
   if (origin.protocol !== "https:" || origin.href !== origin.origin + "/" || origin.username || origin.password ||
       !publishableKey?.startsWith("sb_publishable_")) {
@@ -112,5 +112,11 @@ export function criarIntegracaoOperacional({url, publishableKey, fetcher = fetch
       throw Error("Verificação do provedor não configurada");
     }
   };
-  return {authenticate,central};
+  const cofre = async (actor, id, action, options) => {
+    if (!/^[a-f0-9]{64}$/.test(vaultGuard ?? "")) throw Error("Cofre não configurado");
+    return query(actor, "/rest/v1/rpc/forte_atende_cofre", {method:"POST",body:{
+      ...options,p_guard:vaultGuard,p_conexao:id,p_acao:action
+    }});
+  };
+  return {authenticate,central,cofre};
 }

@@ -87,3 +87,21 @@ de envio fora deste serviço e a autorização dos provedores continua indispon�
 
 Rode `node --test forte-atende/plugins/*.test.mjs` para verificar o fluxo HTTP usando um
 Operacional simulado, incluindo isolamento, duplicatas, sessão inválida e bloqueio de ativação.
+
+### Cofre e OAuth em homologação
+
+A migração `20261122142000_forte_atende_cofre_oauth.sql` cria o armazenamento privado dos
+estados OAuth e o vínculo entre conexão e segredo no Supabase Vault. Configure uma chave
+aleatória hexadecimal de 64 caracteres em `FORTE_ATENDE_VAULT_GUARD` no Render. Guarde
+somente seu SHA-256 em `forte_atende_privado.config.guard_hash`. O RPC requer chave do
+servidor, sessão autenticada e permissão de administrador na empresa da conexão.
+
+Para cadastrar os aplicativos nos consoles do Google e Microsoft Entra (aplicativo Web),
+registre o callback exato `https://forte-atende-homologacao.onrender.com/integracoes.html`.
+Configure `FORTE_ATENDE_GOOGLE_CLIENT_ID` e `FORTE_ATENDE_GOOGLE_CLIENT_SECRET`, ou
+`FORTE_ATENDE_MICROSOFT_CLIENT_ID` e `FORTE_ATENDE_MICROSOFT_CLIENT_SECRET`, como
+variáveis do backend. Gmail pede leitura. Microsoft Entra pede leitura da caixa, do perfil
+e autorização offline. O fluxo usa PKCE e estado de uso único vinculado ao administrador.
+Depois de conferir a identidade da caixa, grava a credencial no Vault sem ativar o canal.
+O envio e a sincronização permanecem desativados neste serviço. Renovação, revogação e
+rotação devem ser implementadas antes do uso operacional.

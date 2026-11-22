@@ -53,7 +53,7 @@ export class GerenciadorPlugins {
     }
     if(typeof this.oauthBroker?.iniciar!=="function") throw Error("Serviço OAuth não configurado");
     const r=await this.oauthBroker.iniciar({
-      tenantId:actor.tenantId,userId:actor.userId,connectionId:c.id,
+      actor,connection:c,tenantId:actor.tenantId,userId:actor.userId,connectionId:c.id,
       provider:c.provider,scopes:p.escopos
     });
     const url=typeof r?.authorizationUrl==="string"?r.authorizationUrl:"";
@@ -64,6 +64,13 @@ export class GerenciadorPlugins {
       (c.provider==="microsoft-graph" && host!=="login.microsoftonline.com"))
       throw Error("URL de autorização não confiável");
     return {status:"aguardando_autorizacao_usuario",pluginId:p.id,authorizationUrl:url};
+  }
+  async concluirAutorizacao(actor,connectionId,{state,code}={}){
+    if(!["master","admin"].includes(actor?.role))throw Error("Acesso não autorizado");
+    const connection=await this.central.store.getConnection(actor.tenantId,connectionId,actor);
+    if(!connection)throw Error("Conexão não encontrada");
+    if(typeof this.oauthBroker?.concluir!=="function")throw Error("Serviço OAuth não configurado");
+    return this.oauthBroker.concluir({actor,connection,state,code});
   }
   async verificar(actor,connectionId,flags={permitirEnvio:false,permitirRecebimento:true}){
     if(!["master","admin"].includes(actor?.role))throw Error("Acesso não autorizado");
