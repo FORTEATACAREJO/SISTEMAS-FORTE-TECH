@@ -80,7 +80,8 @@ pendente não recebe token, senha nem flags de envio ou recebimento.
 
 No serviço `forte-atende-api-homologacao`, configure `FORTE_ATENDE_SUPABASE_URL`,
 `FORTE_ATENDE_SUPABASE_PUBLISHABLE_KEY` e `FORTE_ATENDE_PLUGIN_REGISTRY=on` depois de aplicar
-a migração no projeto autorizado. A chave é a publicável do mesmo projeto usado no login CPF.
+a migração no projeto autorizado. Use a chave publicável do mesmo projeto da URL. O painel só usa a sessão desse projeto.
+A branch de homologação aceita sessões de teste e permanece isolada do login principal.
 Para desativar o cadastro, remova `FORTE_ATENDE_PLUGIN_REGISTRY`. O servidor mantém as rotas
 de envio fora deste serviço e a autorização dos provedores continua indisponível.
 

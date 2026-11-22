@@ -24,7 +24,7 @@ const sanitize=({secretRef,...data})=>data;
  * injeta authenticate(req) verificando a sessao de servidor (nao headers tenant).
  * Regras de negocio estao em CentralMulticanal. Nao chama listen automaticamente.
  */
-export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWebhook=null,pluginManager=null,pluginsOnly=false,registryEnabled,atendimento=new AtendimentoCompartilhado()}={}){
+export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWebhook=null,pluginManager=null,pluginsOnly=false,registryEnabled,registryAuth,atendimento=new AtendimentoCompartilhado()}={}){
  if(!central||typeof authenticate!=="function")throw Error("Autenticador de sessão obrigatório");
  const plugins=pluginManager??new GerenciadorPlugins({central});
  const origins=new Set(allowedOrigins);
@@ -39,7 +39,7 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
      const url=new URL(req.url||"/","https://local.invalid");
      if(url.pathname==="/health"&&req.method==="GET")return response(res,200,{service:"forte-atende-multicanal",status:"api-source"});
      if(url.pathname==="/api/plugins/status"&&req.method==="GET"&&typeof registryEnabled==="boolean")
-       return response(res,200,{registryEnabled,providerAuthorizationEnabled:false});
+       return response(res,200,{registryEnabled,providerAuthorizationEnabled:false,...(registryAuth?{auth:registryAuth}:{})});
      if(url.pathname==="/webhooks/meta"&&req.method==="POST"){
        if(typeof metaWebhook!=="function")return response(res,503,{error:"Webhook não configurado"});
        // metaWebhook obrigatoriamente verifica X-Hub-Signature-256 e body bruto.

@@ -82,15 +82,24 @@ let connections = new Map();
 async function loadRegistry() {
  const status = await fetch(api+"/api/plugins/status",{cache:"no-store",signal:AbortSignal.timeout(8000)});
  if (!status.ok) throw Error("Catálogo temporariamente indisponível.");
- if (!(await status.json()).registryEnabled) {
+ const {registryEnabled,auth} = await status.json();
+ if (!registryEnabled) {
    $("apiStatus").textContent = "Cadastro de conexões desativado neste ambiente.";
    return;
  }
  const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.57.4");
- const db = createClient("https://gtwecfyffjszghnvtlzr.supabase.co","sb_publishable_RP8g0VoZdWh8e9R7Nb9mYw_GSXjSuD3");
+ const authUrl = new URL(auth?.url);
+ if (authUrl.protocol!=="https:" || !authUrl.hostname.endsWith(".supabase.co") ||
+     authUrl.href!==authUrl.origin+"/" || !auth.publishableKey?.startsWith("sb_publishable_")) {
+   throw Error("Configuração de acesso indisponível.");
+ }
+ const registryUsesOperationalSession = authUrl.hostname==="gtwecfyffjszghnvtlzr.supabase.co";
+ const db = createClient(authUrl.origin,auth.publishableKey);
  const request = async (path, body) => {
    const { data:{session} } = await db.auth.getSession();
-   if (!session) throw Error("Entre na central do FORTE ATENDE para acessar os cadastros.");
+   if (!session) throw Error(registryUsesOperationalSession
+     ? "Entre na central do FORTE ATENDE para acessar os cadastros."
+     : "Cadastro disponível para sessões de teste da homologação.");
    const response = await fetch(api+path,{
      method:body?"POST":"GET",cache:"no-store",signal:AbortSignal.timeout(10000),
      headers:{Authorization:"Bearer "+session.access_token,...(body?{"Content-Type":"application/json"}:{})},
