@@ -59,7 +59,8 @@ export function criarServidorApi({central,authenticate,allowedOrigins=[],metaWeb
      if(req.method==="POST"&&url.pathname==="/api/atendimento/exclusoes/restaurar"){if(body.confirmar!==true)return response(res,400,{error:"Confirmação obrigatória"});return response(res,200,{resultado:atendimento.recuperarExclusao(actor,body)});}
      if(req.method==="GET"&&url.pathname==="/api/atendimento/resumo")return response(res,200,atendimento.resumo(actor));
      if(req.method==="GET"&&url.pathname==="/api/provedores")return response(res,200,{providers:listarProvedores()});
-     if(req.method==="GET"&&url.pathname==="/api/plugins")return response(res,200,{plugins:await plugins.catalogo(actor,{canal:url.searchParams.get("canal")||undefined})});
+     if(req.method==="GET"&&url.pathname==="/api/plugins")return response(res,200,{plugins:await plugins.catalogo(actor,{canal:url.searchParams.get("canal")||undefined}),
+         canRegister:["master","admin"].includes(actor.role)});
      if(req.method==="GET"&&url.pathname==="/api/conexoes")return response(res,200,{connections:central.conexoes(actor)});
      if(req.method==="GET"&&url.pathname==="/api/mensagens"){
        return response(res,200,{messages:central.caixaEntrada(actor,{connectionId:url.searchParams.get("connectionId")||undefined,limit:Number(url.searchParams.get("limit"))||50})});

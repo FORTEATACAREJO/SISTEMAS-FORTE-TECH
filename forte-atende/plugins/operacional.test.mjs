@@ -93,6 +93,8 @@ test("fluxo do painel persiste cadastro pendente e bloqueia ativação e envio",
   await withServer(async call=>{
     const a = await (await call(path,{token:"atendente"})).json();
     const b = await (await call(path,{token:"admin-b"})).json();
+    assert.equal(a.canRegister,false);
+    assert.equal(b.canRegister,true);
     assert.equal(a.plugins.find(p=>p.id==="gmail").conexoes[0].id,id);
     assert.equal(b.plugins.find(p=>p.id==="gmail").conexoes.length,0);
     assert.equal((await call(path+"/conexoes/"+id+"/autorizar",{token:"admin-b",body:{}})).status,400);
