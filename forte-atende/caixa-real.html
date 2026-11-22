@@ -1,7 +1,80 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icons/forte-atende-192.png"><meta name="theme-color" content="#123847"><title>FORTE ATENDE | Caixa real em homologação</title><style>body{font-family:system-ui,sans-serif;margin:0;background:#f1f6f8;color:#123847}header{background:#123847;color:white;padding:22px}main{max-width:850px;margin:auto;padding:18px}.card{background:white;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 1px 5px #0001}input,button{padding:13px;border:1px solid #b9cbd1;border-radius:10px;font:inherit;max-width:100%;box-sizing:border-box}input{display:block;width:100%;margin:9px 0}button{background:#008c74;color:white;cursor:pointer}button:disabled{opacity:.5}small{color:#5c707a}.msg{background:#edf8f4;padding:12px;margin:9px 0;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}.error{color:#b22323}#inbox{display:none}label{display:block;margin-top:12px}textarea{display:block;width:100%;box-sizing:border-box;border:1px solid #b9cbd1;border-radius:10px;font:inherit;padding:12px;margin:9px 0}.thread{display:block;width:100%;margin:9px 0;text-align:left;background:white;color:#123847}.msg p{margin:4px 0 0}[hidden]{display:none!important}summary{cursor:pointer;font-weight:600;margin-bottom:12px}</style></head><body><header><strong>FORTE ATENDE</strong><div>Caixa de atendimento</div></header><main>
-  <section id="login" class="card">
-    <h2>Entrar com CPF</h2>
-    <p>Use o CPF e a senha cadastrados no FORTE OPERACIONAL.</p>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><link rel="preconnect" href="https://gtwecfyffjszghnvtlzr.supabase.co" crossorigin>
+<link rel="preconnect" href="https://esm.sh" crossorigin>
+<link rel="modulepreload" href="https://esm.sh/@supabase/supabase-js@2.57.4" crossorigin>
+<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icons/forte-atende-192.png"><meta name="theme-color" content="#123847"><title>FORTE ATENDE | Caixa real em homologação</title><style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#163645;background:#edf4f6;color-scheme:light;--ink:#163645;--muted:#506a77;--line:#d6e4e9;--teal:#006f61;--surface:#fff}
+*{box-sizing:border-box}
+body{margin:0;min-width:0}
+[hidden]{display:none!important}
+button,input,textarea{font:inherit}
+button{min-height:44px;padding:10px 15px;border:1px solid transparent;border-radius:12px;background:var(--teal);color:white;cursor:pointer}
+button:disabled{opacity:.58;cursor:wait}
+:focus-visible{outline:3px solid #087cb2;outline-offset:3px}
+input,textarea{display:block;width:100%;padding:11px 13px;border:1px solid #abc5ce;border-radius:12px;background:#f8fcfd;color:var(--ink);margin:7px 0 13px}
+textarea{resize:vertical}
+h1,h2,h3,p{margin:0}
+h2{font-size:1.25rem;overflow-wrap:anywhere}
+p:empty,small:empty{display:none}
+label{display:block;font-weight:650}
+small,.muted{color:var(--muted)}
+.app-header{background:linear-gradient(110deg,#102f44 10%,#075765 62%,#00786d);color:white;padding:14px 16px;box-shadow:0 2px 12px #13374720}
+.header-inner{max-width:940px;display:flex;align-items:center;gap:12px;margin:auto}
+.header-inner img{width:48px;height:48px;border-radius:13px}
+.app-title{flex:1;min-width:0}
+.app-title h1{font-size:clamp(1.08rem,4vw,1.42rem);letter-spacing:.025em}
+.app-title p{font-size:.82rem;color:#d0ebef;margin-top:2px}
+#sair{background:transparent;border-color:#8fbac0;color:white}
+main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
+.card{border:1px solid var(--line);background:var(--surface);border-radius:18px;box-shadow:0 3px 16px #153c4610}
+#login{max-width:420px;margin:clamp(16px,7vh,70px) auto;padding:24px}
+#login p:not(:empty){margin-top:10px}
+#login form{margin-top:20px}
+#entrar{width:100%}
+#inbox{display:none}
+.channels{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.channel{font-weight:650;background:#fff;color:var(--muted);border-color:var(--line)}
+.channel[aria-pressed="true"]{background:#d9f4ed;color:#075b51;border-color:#85c5b7}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;border-bottom:1px solid var(--line)}
+.panel-head p{font-size:.84rem;color:var(--muted);margin-top:3px}
+.quiet{background:#edf6f8;border-color:#cbe1e7;color:#075362}
+.panel-body{padding:13px 16px 16px}
+.status:not(:empty){font-size:.87rem;color:var(--muted);margin:4px 0 12px}
+.error:not(:empty){font-size:.92rem;color:#9a2528;margin:4px 0 12px;overflow-wrap:anywhere}
+.thread{width:100%;display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;background:transparent;color:var(--ink);padding:11px 8px;border:0;border-bottom:1px solid #e7eff1;border-radius:0}
+.thread:hover,.thread:focus-visible{background:#eef9f6;border-radius:10px}
+.thread-name,.thread-preview{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thread-name{font-weight:700}
+.thread-preview{font-size:.85rem;color:var(--muted);margin-top:3px}
+.avatar{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:#d9f1ec;color:#075b51;font-size:.86rem;font-weight:750}
+.thread-meta{display:grid;justify-items:end;gap:4px;font-size:.78rem;color:var(--muted)}
+.badge{background:var(--teal);color:white;padding:2px 6px;border-radius:12px;font-size:.73rem}
+#conversa,#emailMensagem{padding-top:8px}
+.conversation-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+#mensagens{display:flex;flex-direction:column;gap:8px;background:#f1f7f6;border-radius:14px;padding:12px;max-height:min(55dvh,520px);overflow:auto}
+#mensagens:empty{display:none}
+.msg{background:white;border-radius:12px;padding:10px 12px;white-space:pre-wrap;overflow-wrap:anywhere;align-self:flex-start;max-width:90%}
+.msg--out{background:#dbf4e8;align-self:flex-end}
+.msg--note{background:#faf3d9}
+.msg p:not(:empty){margin-top:3px}
+#emailTexto:not(:empty){white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f7f6;margin:12px 0;max-width:100%}
+#resposta,#emailResposta{padding-top:12px}
+#janelaWhatsApp:not(:empty){padding:12px 0;color:var(--muted)}
+#mais,#emailMais{margin-top:12px}
+@media(max-width:480px){main{padding:12px 10px 24px}.panel-head,.panel-body{padding:12px}.panel-head button{padding-inline:10px}.thread{gap:8px;padding-inline:3px}}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="header-inner">
+    <img src="./icons/forte-atende-192.png" width="48" height="48" alt="">
+    <div class="app-title"><h1>FORTE ATENDE</h1><p>Central de atendimento</p></div>
+    <button id="sair" type="button" hidden>Sair</button>
+  </div>
+</header>
+<main>
+  <section id="login" class="card" aria-labelledby="loginTitle">
+    <h2 id="loginTitle">Entrar com CPF</h2>
+    <p class="muted">Use o CPF e a senha do FORTE OPERACIONAL.</p>
     <form id="form">
       <label for="cpf">CPF</label>
       <input id="cpf" type="text" inputmode="numeric" autocomplete="username" maxlength="14" required>
@@ -9,47 +82,66 @@
       <input id="senha" type="password" inputmode="numeric" autocomplete="current-password" required>
       <button id="entrar" type="submit">Entrar</button>
     </form>
-    <p id="loginStatus" role="status"></p>
+    <p id="loginStatus" role="status" class="status"></p>
   </section>
-  <section id="inbox">
-    <div class="card">
-      <h2>WhatsApp</h2>
-      <button id="atualizar" type="button">Atualizar mensagens</button>
-      <button id="sair" type="button">Sair</button>
-      <p id="status" role="status"></p>
-    </div>
-    <details id="email" class="card">
-      <summary>E-mail · Contato</summary>
-      <button id="emailAtualizar" type="button">Atualizar e-mails</button>
-      <p id="emailStatus" role="status"></p>
-      <div id="emailLista"></div>
-      <button id="emailMais" type="button" hidden>Próximos e-mails</button>
-      <section id="emailMensagem" hidden>
-        <button id="emailVoltar" type="button">Voltar aos e-mails</button>
-        <h3 id="emailAssunto"></h3>
-        <p id="emailDe"></p>
-        <p id="emailTexto" class="msg"></p>
-        <small id="emailAnexos"></small>
-        <form id="emailResposta">
-          <label for="emailRascunho">Responder ao remetente</label>
-          <textarea id="emailRascunho" maxlength="10000" rows="3" required></textarea>
-          <button id="emailEnviar" type="submit">Enviar pela Hostinger</button>
-        </form>
-      </section>
-    </details>
-    <div id="conversas"></div>
-    <button id="mais" type="button" hidden>Carregar mais conversas</button>
-    <section id="conversa" class="card" hidden>
-      <button id="voltar" type="button">Voltar às conversas</button>
-      <h2 id="contato"></h2>
-      <div id="mensagens"></div>
-      <p id="janelaWhatsApp"></p>
-      <form id="resposta" hidden>
-        <label for="texto">Sua resposta</label>
-        <textarea id="texto" maxlength="4096" rows="3" required></textarea>
-        <button id="enviar" type="submit">Enviar pelo WhatsApp</button>
-      </form>
-      <p id="statusConversa" role="status"></p>
+  <section id="inbox" aria-label="Caixa de atendimento">
+    <nav class="channels" aria-label="Canais">
+      <button id="tabWhatsApp" class="channel" type="button" aria-pressed="true" aria-controls="whatsapp">WhatsApp</button>
+      <button id="tabEmail" class="channel" type="button" aria-pressed="false" aria-controls="email">E-mail</button>
+    </nav>
+    <section id="whatsapp" class="card" aria-labelledby="waTitle">
+      <header class="panel-head">
+        <div><h2 id="waTitle">Conversas WhatsApp</h2><p>(64) 99917-2700</p></div>
+        <button id="atualizar" class="quiet" type="button">Atualizar</button>
+      </header>
+      <div class="panel-body">
+        <p id="status" role="status" class="status"></p>
+        <div id="listaWhatsApp">
+          <input id="buscar" type="search" aria-label="Buscar nas conversas carregadas" placeholder="Buscar conversas" autocomplete="off">
+          <div id="conversas"></div>
+          <p id="semResultados" class="status" hidden>Nenhuma conversa encontrada nas mensagens carregadas.</p>
+          <button id="mais" class="quiet" type="button" hidden>Carregar mais conversas</button>
+        </div>
+        <section id="conversa" aria-labelledby="contato" hidden>
+          <div class="conversation-head">
+            <button id="voltar" class="quiet" type="button">Voltar</button>
+            <h2 id="contato"></h2>
+          </div>
+          <div id="mensagens" role="region" aria-label="Histórico de mensagens" tabindex="0"></div>
+          <p id="janelaWhatsApp"></p>
+          <form id="resposta" hidden>
+            <label for="texto">Sua resposta</label>
+            <textarea id="texto" maxlength="4096" rows="2" required></textarea>
+            <button id="enviar" type="submit">Enviar pelo WhatsApp</button>
+          </form>
+          <p id="statusConversa" role="status" class="status"></p>
+        </section>
+      </div>
+    </section>
+    <section id="email" class="card" aria-labelledby="emailTitle" hidden>
+      <header class="panel-head">
+        <div><h2 id="emailTitle">E-mail · Contato</h2><p>contato@forteatacarejo.com.br</p></div>
+        <button id="emailAtualizar" class="quiet" type="button">Atualizar</button>
+      </header>
+      <div class="panel-body">
+        <p id="emailStatus" role="status" class="status"></p>
+        <div id="emailLista"></div>
+        <button id="emailMais" class="quiet" type="button" hidden>Próximos e-mails</button>
+        <section id="emailMensagem" hidden>
+          <div class="conversation-head">
+            <button id="emailVoltar" class="quiet" type="button">Voltar</button>
+            <h3 id="emailAssunto"></h3>
+          </div>
+          <p id="emailDe"></p>
+          <p id="emailTexto" class="msg"></p>
+          <small id="emailAnexos"></small>
+          <form id="emailResposta">
+            <label for="emailRascunho">Responder ao remetente</label>
+            <textarea id="emailRascunho" maxlength="10000" rows="3" required></textarea>
+            <button id="emailEnviar" type="submit">Enviar pela Hostinger</button>
+          </form>
+        </section>
+      </div>
     </section>
   </section>
 </main>
@@ -83,24 +175,28 @@ const delivery = {
 };
 let selected = null;
 let offset = 0;
+let listHasMore = false;
 let listSnapshot = "";
 let threadSnapshot = "";
 let busy = false;
+let refreshing = false;
+let viewVersion = 0;
 let pending = null;
+const controls = ["atualizar", "sair", "enviar", "mais", "voltar", "emailEnviar", "emailAtualizar", "emailMais", "emailVoltar", "tabWhatsApp", "tabEmail"];
 
-async function exclusive(task, status, background = false) {
+async function exclusive(task, status) {
   if (busy) return;
   busy = true;
-  if (!background) status.className = "";
-  if (!background) for (const id of ["atualizar", "sair", "enviar", "mais", "voltar", "texto", "emailEnviar", "emailRascunho", "emailAtualizar", "emailMais", "emailVoltar"]) $(id).disabled = true;
+  viewVersion += 1;
+  status.className = "status";
+  for (const id of controls) $(id).disabled = true;
   try {
     await task();
   } catch (error) {
-    if (background) return;
     status.textContent = error.message;
     status.className = "error";
   } finally {
-    if (!background) for (const id of ["atualizar", "sair", "enviar", "mais", "voltar", "texto", "emailEnviar", "emailRascunho", "emailAtualizar", "emailMais", "emailVoltar"]) $(id).disabled = false;
+    for (const id of controls) $(id).disabled = false;
     busy = false;
   }
 }
@@ -109,15 +205,59 @@ function contactName(thread) {
   return thread.name || thread.phone || "Conversa de WhatsApp";
 }
 
-async function showList(reset = true, background = false) {
+const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
+const listDate = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+const dateText = (value, formatter = dateFormat) => {
+  const date = new Date(value || NaN);
+  return Number.isNaN(date.getTime()) ? "" : formatter.format(date);
+};
+const normalize = value => value.toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+function filterList() {
+  const query = normalize($("buscar").value.trim());
+  const rows = Array.from($("conversas").children);
+  for (const row of rows) row.hidden = !row.dataset.search.includes(query);
+  $("semResultados").hidden = !query || rows.some(row => !row.hidden);
+}
+
+function conversationRow(title, preview, date, unread = 0) {
+  const button = t("button", "");
+  button.type = "button";
+  button.className = "thread";
+  const initials = title.split(/\s+/).slice(0, 2).map(word => word[0] || "").join("").toUpperCase();
+  const avatar = t("span", initials);
+  avatar.className = "avatar";
+  avatar.setAttribute("aria-hidden", "true");
+  const content = t("span", "");
+  const name = t("span", title);
+  const excerpt = t("span", preview);
+  name.className = "thread-name";
+  excerpt.className = "thread-preview";
+  content.append(name, excerpt);
+  const meta = t("span", "");
+  meta.className = "thread-meta";
+  meta.append(t("span", dateText(date, listDate)));
+  if (unread) {
+    const badge = t("span", String(unread));
+    badge.className = "badge";
+    badge.setAttribute("aria-label", unread + " não lidas");
+    meta.append(badge);
+  }
+  button.append(avatar, content, meta);
+  return button;
+}
+
+async function showList(reset = true, version = null) {
   const list = $("conversas");
-  if (!background) $("status").textContent = "Consultando WhatsApp...";
+  if (version === null && !$("conversas").children.length) $("status").textContent = "Consultando WhatsApp...";
   const page = await callInbox("INBOX_LIST", { offset: reset ? 0 : offset });
+  if (version !== null && (version !== viewVersion || selected)) return;
   const snapshot = JSON.stringify([page.total, page.threads.map(thread => [thread.id, thread.name, thread.phone, thread.unread, thread.lastAt])]);
   const status = $("status");
-  status.className = "";
-  status.textContent = page.total + (page.total === 1 ? " conversa no WhatsApp" : " conversas no WhatsApp");
-  if (background && snapshot === listSnapshot) return;
+  status.className = "status";
+  const label = page.total + (page.total === 1 ? " conversa" : " conversas");
+  if (status.textContent !== label) status.textContent = label;
+  if (version !== null && snapshot === listSnapshot) return;
   if (reset) {
     listSnapshot = snapshot;
     threadSnapshot = "";
@@ -129,33 +269,43 @@ async function showList(reset = true, background = false) {
     list.replaceChildren();
     offset = 0;
   }
-  list.hidden = false;
+  $("listaWhatsApp").hidden = false;
   for (const thread of page.threads) {
-    const button = t("button", contactName(thread) + (thread.unread ? " · " + thread.unread + " nova(s)" : ""));
-    button.type = "button";
-    button.className = "thread";
-    button.onclick = () => exclusive(() => showThread(thread.id), $("status"));
+    const title = contactName(thread);
+    const preview = thread.preview || "";
+    const button = conversationRow(title, preview, thread.lastAt, thread.unread);
+    button.dataset.search = normalize([title, thread.phone, preview].filter(Boolean).join(" "));
+    button.onclick = () => exclusive(() => openThread(thread), $("statusConversa"));
     list.append(button);
   }
   offset += page.threads.length;
-  $("mais").hidden = offset >= page.total;
+  listHasMore = offset < page.total;
+  $("mais").hidden = !listHasMore;
+  filterList();
 }
 
-async function showThread(threadId) {
-  const page = await callInbox("INBOX_MESSAGES", { threadId });
-  if (selected !== threadId) {
-    threadSnapshot = "";
-    $("statusConversa").textContent = "";
-    $("statusConversa").className = "";
-    $("texto").value = pending?.threadId === threadId ? pending.text : "";
-  }
-  selected = threadId;
-  $("conversas").hidden = true;
-  $("mais").hidden = true;
+async function openThread(thread) {
+  selected = thread.id;
+  threadSnapshot = "";
+  $("listaWhatsApp").hidden = true;
   $("conversa").hidden = false;
+  $("contato").textContent = contactName(thread);
+  $("mensagens").replaceChildren();
+  $("janelaWhatsApp").textContent = "";
+  $("resposta").hidden = true;
+  $("statusConversa").textContent = "Carregando conversa...";
+  $("texto").value = pending?.threadId === thread.id ? pending.text : "";
+  await showThread(thread.id);
+}
+
+async function showThread(threadId, version = null) {
+  const page = await callInbox("INBOX_MESSAGES", { threadId });
+  if (selected !== threadId || (version !== null && version !== viewVersion)) return;
+  if ($("statusConversa").textContent === "Carregando conversa...") $("statusConversa").textContent = "";
   $("contato").textContent = contactName(page.thread);
   const snapshot = JSON.stringify([page.canReply, page.messages.map(message => [message.id, message.at, message.state])]);
   if (snapshot === threadSnapshot) return;
+  const shouldScroll = !threadSnapshot || $("mensagens").scrollHeight - $("mensagens").scrollTop - $("mensagens").clientHeight < 80;
   threadSnapshot = snapshot;
   $("resposta").hidden = !page.canReply;
   $("janelaWhatsApp").textContent = page.canReply ? "" : "A janela de resposta de 24 horas fechou. Ela reabre quando o contato mandar uma nova mensagem.";
@@ -163,20 +313,22 @@ async function showThread(threadId) {
   messages.replaceChildren();
   for (const message of page.messages) {
     const card = t("article", "");
-    card.className = "msg";
+    card.className = message.direction === "OUT" ? "msg msg--out" : message.direction === "NOTE" ? "msg msg--note" : "msg";
     const label = message.direction === "OUT" ? "Equipe" : message.direction === "NOTE" ? "Nota interna" : "Contato";
-    const date = new Date(message.at || message.receivedAt).toLocaleString("pt-BR");
+    const date = dateText(message.at || message.receivedAt);
     const state = message.direction === "OUT" ? delivery[message.state] : "";
     card.append(t("small", [label, date, state].filter(Boolean).join(" · ")),
       t("p", message.text || (message.mediaId ? "Anexo de WhatsApp" : "Mensagem de WhatsApp")));
     messages.append(card);
   }
+  if (shouldScroll) messages.scrollTop = messages.scrollHeight;
 }
 
 async function load() {
   const { data: { session } } = await db.auth.getSession();
   $("login").style.display = session ? "none" : "block";
   $("inbox").style.display = session ? "block" : "none";
+  $("sair").hidden = !session;
   if (session) await exclusive(() => showList(), $("status"));
 }
 
@@ -204,10 +356,8 @@ $("resposta").addEventListener("submit", event => {
       state === "UNCERTAIN" ? "Envio incerto. Atualize a conversa para conferir o resultado antes de enviar novamente." :
       delivery[state] || "Atualize a conversa para conferir o envio.";
     $("statusConversa").textContent = status;
-    await showThread(threadId).catch(() => {});
-    $("statusConversa").textContent = status;
-    $("statusConversa").className = ["FAILED", "UNCERTAIN"].includes(state) ? "error" : "";
-  }, $("statusConversa"));
+    $("statusConversa").className = ["FAILED", "UNCERTAIN"].includes(state) ? "error" : "status";
+  }, $("statusConversa")).then(refreshWhatsApp);
 });
 
 $("form").addEventListener("submit", async event => {
@@ -225,7 +375,7 @@ $("form").addEventListener("submit", async event => {
   }
 
   button.disabled = true;
-  status.className = "";
+  status.className = "status";
   status.textContent = "Autenticando...";
   try {
     const { data, error } = await db.functions.invoke("login-cpf", { body: { cpf, password } });
@@ -284,9 +434,7 @@ async function listEmail(page = 1) {
   clearEmailMessage();
   list.hidden = false;
   for (const message of data.messages) {
-    const button = t("button", (message.subject || "(Sem assunto)") + " · " + message.from);
-    button.type = "button";
-    button.className = "thread";
+    const button = conversationRow(message.subject || "(Sem assunto)", message.from, message.date);
     button.onclick = () => exclusive(() => openEmail(message.uid), $("emailStatus"));
     list.append(button);
   }
@@ -310,11 +458,19 @@ async function openEmail(uid) {
   $("emailStatus").textContent = "";
 }
 
-$("email").addEventListener("toggle", () => {
-  if ($("email").open && !$("emailLista").children.length && !emailMessage) {
+function selectChannel(email) {
+  viewVersion += 1;
+  $("email").hidden = !email;
+  $("whatsapp").hidden = email;
+  $("tabWhatsApp").setAttribute("aria-pressed", String(!email));
+  $("tabEmail").setAttribute("aria-pressed", String(email));
+  if (email && !$("emailLista").children.length && !emailMessage) {
     void exclusive(() => listEmail(), $("emailStatus"));
   }
-});
+}
+$("tabWhatsApp").onclick = () => selectChannel(false);
+$("tabEmail").onclick = () => selectChannel(true);
+$("buscar").addEventListener("input", filterList);
 $("emailAtualizar").onclick = $("emailVoltar").onclick = () => exclusive(() => listEmail(), $("emailStatus"));
 $("emailMais").onclick = () => exclusive(() => listEmail(emailPage + 1), $("emailStatus"));
 
@@ -347,7 +503,16 @@ $("atualizar").onclick = () => exclusive(
   selected ? $("statusConversa") : $("status")
 );
 $("mais").onclick = () => exclusive(() => showList(false), $("status"));
-$("voltar").onclick = () => exclusive(() => showList(), $("status"));
+$("voltar").onclick = () => {
+  viewVersion += 1;
+  selected = null;
+  threadSnapshot = "";
+  $("conversa").hidden = true;
+  $("listaWhatsApp").hidden = false;
+  $("mais").hidden = !listHasMore;
+  $("statusConversa").textContent = "";
+  void refreshWhatsApp();
+};
 $("sair").onclick = () => exclusive(async () => {
   const { error } = await db.auth.signOut();
   if (error) throw Error("Não foi possível sair. Tente novamente.");
@@ -355,7 +520,12 @@ $("sair").onclick = () => exclusive(async () => {
   threadSnapshot = listSnapshot = "";
   emailPending = null;
   clearEmailMessage();
-  $("email").open = false;
+  selectChannel(false);
+  $("buscar").value = "";
+  $("semResultados").hidden = true;
+  $("sair").hidden = true;
+  offset = 0;
+  listHasMore = false;
   $("emailLista").replaceChildren();
   $("emailStatus").textContent = "";
   $("texto").value = "";
@@ -366,14 +536,22 @@ $("sair").onclick = () => exclusive(async () => {
   $("login").style.display = "block";
   $("inbox").style.display = "none";
 }, selected ? $("statusConversa") : $("status"));
-function refreshWhatsApp() {
-  if (document.hidden || busy || $("inbox").style.display !== "block" || $("email").open) return;
-  if (selected) void exclusive(() => showThread(selected), $("statusConversa"), true);
-  else if (offset <= 100) void exclusive(() => showList(true, true), $("status"), true);
+async function refreshWhatsApp() {
+  if (document.hidden || busy || refreshing || $("inbox").style.display !== "block" || !$("email").hidden) return;
+  const version = viewVersion;
+  refreshing = true;
+  try {
+    if (selected) await showThread(selected, version);
+    else if (offset <= 100) await showList(true, version);
+  } catch {
+    // Preserve the current screen and retry on the next refresh.
+  } finally {
+    refreshing = false;
+  }
 }
 
 document.addEventListener("visibilitychange", refreshWhatsApp);
-setInterval(refreshWhatsApp, 20000);
+setInterval(refreshWhatsApp, 10000);
 await load();
 </script>
 <script>
