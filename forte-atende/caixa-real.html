@@ -31,7 +31,7 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
 #login form{margin-top:20px}
 #entrar{width:100%}
 #inbox{display:none}
-.channels{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.channels{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px;margin-bottom:14px}
 .channel{font-weight:650;background:#fff;color:var(--muted);border-color:var(--line)}
 .channel[aria-pressed="true"]{background:#d9f4ed;color:#075b51;border-color:#85c5b7}
 .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;border-bottom:1px solid var(--line)}
@@ -61,6 +61,10 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
 #janelaWhatsApp:not(:empty){padding:12px 0;color:var(--muted)}
 #mais,#emailMais{margin-top:12px}
 @media(max-width:480px){main{padding:12px 10px 24px}.panel-head,.panel-body{padding:12px}.panel-head button{padding-inline:10px}.thread{gap:8px;padding-inline:3px}}
+.exclude{background:#fff1ef;border-color:#ecc0b8;color:#812924;margin-top:8px}
+.exclusion-row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}
+.exclusion-row>div{min-width:0;overflow-wrap:anywhere}
+@media(max-width:420px){.channel{padding-inline:6px;font-size:.86rem}}
 </style>
 </head>
 <body>
@@ -88,6 +92,7 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
     <nav class="channels" aria-label="Canais">
       <button id="tabWhatsApp" class="channel" type="button" aria-pressed="true" aria-controls="whatsapp">WhatsApp</button>
       <button id="tabEmail" class="channel" type="button" aria-pressed="false" aria-controls="email">E-mail</button>
+      <button id="tabExclusoes" class="channel" type="button" aria-pressed="false" aria-controls="exclusoes">Caixa de Exclusões</button>
     </nav>
     <section id="whatsapp" class="card" aria-labelledby="waTitle">
       <header class="panel-head">
@@ -135,12 +140,20 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
           <p id="emailDe"></p>
           <p id="emailTexto" class="msg"></p>
           <small id="emailAnexos"></small>
+          <button id="emailExcluir" class="exclude" type="button" hidden>Excluir mensagem</button>
           <form id="emailResposta">
             <label for="emailRascunho">Responder ao remetente</label>
             <textarea id="emailRascunho" maxlength="10000" rows="3" required></textarea>
             <button id="emailEnviar" type="submit">Enviar pela Hostinger</button>
           </form>
         </section>
+      </div>
+    </section>
+    <section id="exclusoes" class="card" aria-labelledby="exclusoesTitle" hidden>
+      <header class="panel-head"><h2 id="exclusoesTitle">Caixa de Exclusões</h2><button id="exclusoesAtualizar" class="quiet" type="button">Atualizar</button></header>
+      <div class="panel-body">
+        <p id="exclusoesStatus" class="status" role="status"></p>
+        <div id="exclusoesLista"></div>
       </div>
     </section>
   </section>
@@ -182,7 +195,10 @@ let busy = false;
 let refreshing = false;
 let viewVersion = 0;
 let pending = null;
-const controls = ["atualizar", "sair", "enviar", "mais", "voltar", "emailEnviar", "emailAtualizar", "emailMais", "emailVoltar", "tabWhatsApp", "tabEmail"];
+let exclusions = new Map();
+let exclusionActor = "";
+const readRequests = new Map();
+const controls = ["atualizar", "sair", "enviar", "mais", "voltar", "emailEnviar", "emailAtualizar", "emailMais", "emailVoltar", "tabWhatsApp", "tabEmail", "tabExclusoes", "exclusoesAtualizar", "emailExcluir"];
 
 async function exclusive(task, status) {
   if (busy) return;
@@ -199,6 +215,51 @@ async function exclusive(task, status) {
     for (const id of controls) $(id).disabled = false;
     busy = false;
   }
+}
+
+function exclusionKey(canal, id) {
+  return canal + ":" + id;
+}
+
+async function loadExclusions() {
+  const { items, actor } = await callEmail("EXCLUSIONS");
+  exclusionActor = actor;
+  exclusions = new Map(items.map(item => [exclusionKey(item.canal, item.chave), item]));
+}
+
+async function confirmExclusion(fields) {
+  if (!exclusionActor) await loadExclusions();
+  if (!window.confirm(exclusionActor + ", deseja confirmar a exclusão? A mensagem será movida para a Caixa de Exclusões.")) return false;
+  await callEmail("EXCLUDE", fields);
+  await loadExclusions();
+  return true;
+}
+
+async function showExclusions() {
+  await loadExclusions();
+  const list = $("exclusoesLista");
+  list.replaceChildren();
+  for (const item of Array.from(exclusions.values()).reverse()) {
+    const row = t("article", "");
+    row.className = "exclusion-row";
+    const detail = t("div", "");
+    const channel = item.canal === "email" ? "E-mail" : "WhatsApp";
+    detail.append(t("p", channel + " · " + item.descricao),
+      t("small", "Excluído por " + item.excluido_por_nome + " · " + dateText(item.excluido_em)));
+    const restore = t("button", "Restaurar");
+    restore.type = "button";
+    restore.className = "quiet";
+    restore.onclick = () => exclusive(async () => {
+      await callEmail("RESTORE", { id: item.id });
+      await showExclusions();
+      emailListDirty = true;
+      listSnapshot = threadSnapshot = "";
+      $("exclusoesStatus").textContent = "Mensagem restaurada.";
+    }, $("exclusoesStatus"));
+    row.append(detail, restore);
+    list.append(row);
+  }
+  $("exclusoesStatus").textContent = exclusions.size ? exclusions.size + " mensagem(ns)" : "Nenhuma mensagem na Caixa de Exclusões.";
 }
 
 function contactName(thread) {
@@ -247,12 +308,17 @@ function conversationRow(title, preview, date, unread = 0) {
   return button;
 }
 
-async function showList(reset = true, version = null) {
+async function showList(reset = true, version = null, ready = null) {
   const list = $("conversas");
   if (version === null && !$("conversas").children.length) $("status").textContent = "Consultando WhatsApp...";
   const page = await callInbox("INBOX_LIST", { offset: reset ? 0 : offset });
+  if (ready) await ready;
   if (version !== null && (version !== viewVersion || selected)) return;
-  const snapshot = JSON.stringify([page.total, page.threads.map(thread => [thread.id, thread.name, thread.phone, thread.unread, thread.lastAt])]);
+  const hiddenPreviews = new Set(Array.from(exclusions.values())
+    .filter(item => item.canal === "whatsapp" && item.evento_em)
+    .map(item => item.conversa + ":" + Date.parse(item.evento_em)));
+  const previewFor = thread => hiddenPreviews.has(thread.id + ":" + Date.parse(thread.lastAt)) ? "" : thread.preview || "";
+  const snapshot = JSON.stringify([page.total, page.threads.map(thread => [thread.id, thread.name, thread.phone, thread.unread, thread.lastAt, previewFor(thread)])]);
   const status = $("status");
   status.className = "status";
   const label = page.total + (page.total === 1 ? " conversa" : " conversas");
@@ -272,8 +338,9 @@ async function showList(reset = true, version = null) {
   $("listaWhatsApp").hidden = false;
   for (const thread of page.threads) {
     const title = contactName(thread);
-    const preview = thread.preview || "";
+    const preview = previewFor(thread);
     const button = conversationRow(title, preview, thread.lastAt, thread.unread);
+    button.dataset.thread = thread.id;
     button.dataset.search = normalize([title, thread.phone, preview].filter(Boolean).join(" "));
     button.onclick = () => exclusive(() => openThread(thread), $("statusConversa"));
     list.append(button);
@@ -303,7 +370,13 @@ async function showThread(threadId, version = null) {
   if (selected !== threadId || (version !== null && version !== viewVersion)) return;
   if ($("statusConversa").textContent === "Carregando conversa...") $("statusConversa").textContent = "";
   $("contato").textContent = contactName(page.thread);
-  const snapshot = JSON.stringify([page.canReply, page.messages.map(message => [message.id, message.at, message.state])]);
+  void markRead(threadId, page).catch(() => {
+    if (selected === threadId && !$("statusConversa").textContent) {
+      $("statusConversa").textContent = "Não foi possível marcar como lida. A caixa tentará novamente.";
+    }
+  });
+  const visibleMessages = page.messages.filter(message => !exclusions.has(exclusionKey("whatsapp", message.id)));
+  const snapshot = JSON.stringify([page.canReply, visibleMessages.map(message => [message.id, message.at, message.state])]);
   if (snapshot === threadSnapshot) return;
   const shouldScroll = !threadSnapshot || $("mensagens").scrollHeight - $("mensagens").scrollTop - $("mensagens").clientHeight < 80;
   threadSnapshot = snapshot;
@@ -311,7 +384,7 @@ async function showThread(threadId, version = null) {
   $("janelaWhatsApp").textContent = page.canReply ? "" : "A janela de resposta de 24 horas fechou. Ela reabre quando o contato mandar uma nova mensagem.";
   const messages = $("mensagens");
   messages.replaceChildren();
-  for (const message of page.messages) {
+  for (const message of visibleMessages) {
     const card = t("article", "");
     card.className = message.direction === "OUT" ? "msg msg--out" : message.direction === "NOTE" ? "msg msg--note" : "msg";
     const label = message.direction === "OUT" ? "Equipe" : message.direction === "NOTE" ? "Nota interna" : "Contato";
@@ -319,9 +392,41 @@ async function showThread(threadId, version = null) {
     const state = message.direction === "OUT" ? delivery[message.state] : "";
     card.append(t("small", [label, date, state].filter(Boolean).join(" · ")),
       t("p", message.text || (message.mediaId ? "Anexo de WhatsApp" : "Mensagem de WhatsApp")));
+    const remove = t("button", "Excluir");
+    remove.type = "button";
+    remove.className = "exclude";
+    remove.setAttribute("aria-label", "Excluir esta mensagem");
+    remove.onclick = () => exclusive(async () => {
+      if (await confirmExclusion({ canal: "whatsapp", messageId: message.id })) {
+        card.remove();
+        listSnapshot = threadSnapshot = "";
+        $("statusConversa").textContent = "Mensagem movida para a Caixa de Exclusões.";
+      }
+    }, $("statusConversa"));
+    card.append(remove);
     messages.append(card);
   }
   if (shouldScroll) messages.scrollTop = messages.scrollHeight;
+}
+
+async function markRead(threadId, page) {
+  const timestamp = page.thread.readAt || "";
+  const unread = page.messages.some(message => message.direction === "IN" &&
+    (message.receivedAt || message.at || "") > timestamp);
+  if (!unread || readRequests.has(threadId)) return;
+
+  readRequests.set(threadId, true);
+  try {
+    await callInbox("INBOX_UPDATE", { threadId, markRead: true });
+    const row = Array.from($("conversas").children).find(item => item.dataset.thread === threadId);
+    row?.querySelector(".badge")?.remove();
+    listSnapshot = "";
+    if ($("statusConversa").textContent === "Não foi possível marcar como lida. A caixa tentará novamente.") {
+      $("statusConversa").textContent = "";
+    }
+  } finally {
+    readRequests.delete(threadId);
+  }
 }
 
 async function load() {
@@ -329,7 +434,9 @@ async function load() {
   $("login").style.display = session ? "none" : "block";
   $("inbox").style.display = session ? "block" : "none";
   $("sair").hidden = !session;
-  if (session) await exclusive(() => showList(), $("status"));
+  if (session) await exclusive(async () => {
+    await showList(true, null, loadExclusions().catch(() => {}));
+  }, $("status"));
 }
 
 $("resposta").addEventListener("submit", event => {
@@ -406,6 +513,8 @@ $("form").addEventListener("submit", async event => {
 let emailMessage = null;
 let emailPending = null;
 let emailPage = 1;
+let emailListDirty = false;
+let emailRows = 0;
 
 function clearEmailMessage() {
   emailMessage = null;
@@ -430,17 +539,23 @@ async function listEmail(page = 1) {
   $("emailStatus").textContent = "Consultando a Hostinger...";
   const data = await callEmail("LIST", { page });
   const list = $("emailLista");
-  if (page === 1) list.replaceChildren();
+  if (page === 1) {
+    list.replaceChildren();
+    emailRows = 0;
+  }
+  emailRows += data.messages.length;
+  emailListDirty = false;
   clearEmailMessage();
   list.hidden = false;
   for (const message of data.messages) {
+    if (exclusions.has(exclusionKey("email", message.uid + ":" + message.messageId))) continue;
     const button = conversationRow(message.subject || "(Sem assunto)", message.from, message.date);
     button.onclick = () => exclusive(() => openEmail(message.uid), $("emailStatus"));
     list.append(button);
   }
   emailPage = page;
-  $("emailMais").hidden = list.children.length >= Number(data.total || 0);
-  $("emailStatus").textContent = data.address + " · " + data.total + " e-mail(s) na caixa de entrada";
+  $("emailMais").hidden = !data.messages.length || emailRows >= Number(data.total || 0);
+  $("emailStatus").textContent = list.children.length + " e-mail(s) exibidos";
 }
 
 async function openEmail(uid) {
@@ -455,23 +570,48 @@ async function openEmail(uid) {
   $("emailAnexos").textContent = message.hasAttachments ? "Anexos disponíveis no webmail." : "";
   $("emailRascunho").value = emailPending?.messageId === message.messageId ? emailPending.text : "";
   $("emailResposta").hidden = !message.from || !message.messageId;
+  $("emailExcluir").hidden = !message.messageId;
   $("emailStatus").textContent = "";
 }
 
-function selectChannel(email) {
+function selectChannel(channel) {
   viewVersion += 1;
-  $("email").hidden = !email;
-  $("whatsapp").hidden = email;
-  $("tabWhatsApp").setAttribute("aria-pressed", String(!email));
-  $("tabEmail").setAttribute("aria-pressed", String(email));
-  if (email && !$("emailLista").children.length && !emailMessage) {
+  $("whatsapp").hidden = channel !== "whatsapp";
+  $("email").hidden = channel !== "email";
+  $("exclusoes").hidden = channel !== "exclusoes";
+  $("tabWhatsApp").setAttribute("aria-pressed", String(channel === "whatsapp"));
+  $("tabEmail").setAttribute("aria-pressed", String(channel === "email"));
+  $("tabExclusoes").setAttribute("aria-pressed", String(channel === "exclusoes"));
+}
+$("tabWhatsApp").onclick = () => {
+  selectChannel("whatsapp");
+  void refreshWhatsApp();
+};
+$("tabEmail").onclick = () => {
+  selectChannel("email");
+  if (emailListDirty || (!$("emailLista").children.length && !emailMessage)) {
     void exclusive(() => listEmail(), $("emailStatus"));
   }
-}
-$("tabWhatsApp").onclick = () => selectChannel(false);
-$("tabEmail").onclick = () => selectChannel(true);
+};
+$("tabExclusoes").onclick = () => {
+  selectChannel("exclusoes");
+  void exclusive(showExclusions, $("exclusoesStatus"));
+};
+$("exclusoesAtualizar").onclick = () => exclusive(showExclusions, $("exclusoesStatus"));
+$("emailExcluir").onclick = () => exclusive(async () => {
+  const { uid, messageId } = emailMessage;
+  if (!await confirmExclusion({ canal: "email", uid, messageId })) return;
+  emailListDirty = true;
+  clearEmailMessage();
+  await listEmail();
+  $("emailStatus").textContent = "E-mail movido para a Caixa de Exclusões.";
+}, $("emailStatus"));
 $("buscar").addEventListener("input", filterList);
-$("emailAtualizar").onclick = $("emailVoltar").onclick = () => exclusive(() => listEmail(), $("emailStatus"));
+$("emailVoltar").onclick = () => exclusive(() => listEmail(), $("emailStatus"));
+$("emailAtualizar").onclick = () => exclusive(async () => {
+  await loadExclusions();
+  await listEmail();
+}, $("emailStatus"));
 $("emailMais").onclick = () => exclusive(() => listEmail(emailPage + 1), $("emailStatus"));
 
 $("emailResposta").addEventListener("submit", event => {
@@ -499,7 +639,10 @@ $("emailResposta").addEventListener("submit", event => {
 });
 
 $("atualizar").onclick = () => exclusive(
-  () => selected ? showThread(selected) : showList(),
+  async () => {
+    await loadExclusions().catch(() => {});
+    return selected ? showThread(selected) : showList();
+  },
   selected ? $("statusConversa") : $("status")
 );
 $("mais").onclick = () => exclusive(() => showList(false), $("status"));
@@ -520,11 +663,17 @@ $("sair").onclick = () => exclusive(async () => {
   threadSnapshot = listSnapshot = "";
   emailPending = null;
   clearEmailMessage();
-  selectChannel(false);
+  selectChannel("whatsapp");
+  exclusions.clear();
+  exclusionActor = "";
+  $("exclusoesLista").replaceChildren();
+  $("exclusoesStatus").textContent = "";
   $("buscar").value = "";
   $("semResultados").hidden = true;
   $("sair").hidden = true;
   offset = 0;
+  emailRows = 0;
+  emailListDirty = false;
   listHasMore = false;
   $("emailLista").replaceChildren();
   $("emailStatus").textContent = "";
@@ -537,7 +686,7 @@ $("sair").onclick = () => exclusive(async () => {
   $("inbox").style.display = "none";
 }, selected ? $("statusConversa") : $("status"));
 async function refreshWhatsApp() {
-  if (document.hidden || busy || refreshing || $("inbox").style.display !== "block" || !$("email").hidden) return;
+  if (document.hidden || busy || refreshing || $("inbox").style.display !== "block" || $("whatsapp").hidden) return;
   const version = viewVersion;
   refreshing = true;
   try {

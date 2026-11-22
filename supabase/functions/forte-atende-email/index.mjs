@@ -71,7 +71,7 @@ Deno.serve(async req => {
 
     const [grant, account] = await Promise.all([
       client.rpc("access_current_module", { p_app: "vendas" }),
-      client.from("fc_perfis").select("empresa_id,ativo,trocar_senha,status_aprovacao,permissoes").eq("user_id", user.id).maybeSingle()
+      client.from("fc_perfis").select("empresa_id,nome,ativo,trocar_senha,status_aprovacao,permissoes").eq("user_id", user.id).maybeSingle()
     ]);
     const profile = account.data;
     const role = grant.data?.role;
@@ -95,9 +95,60 @@ Deno.serve(async req => {
     if (raw.length > 80000) return json({ error: "Requisição muito grande." }, 413);
     let body;
     try { body = JSON.parse(raw); } catch { return json({ error: "Requisição inválida." }, 400); }
-    if (!["LIST", "OPEN", "REPLY"].includes(body?.action)) {
+    if (!["LIST", "OPEN", "REPLY", "EXCLUSIONS", "EXCLUDE", "RESTORE"].includes(body?.action)) {
       return json({ error: "Ação inválida." }, 400);
     }
+
+    const exclusions = () => db.from("forte_atende_exclusoes");
+    const actor = profile.nome?.trim() || user.email || user.id;
+    if (body.action === "EXCLUSIONS") {
+      const items = [];
+      let lastId = 0;
+      while (true) {
+        const { data, error } = await exclusions()
+          .select("id,canal,chave,conversa,evento_em,descricao,excluido_por_nome,excluido_em")
+          .eq("empresa_id", profile.empresa_id).is("restaurado_em", null)
+          .gt("id", lastId).order("id").limit(250);
+        if (error) throw problem(503, "Não foi possível consultar a Caixa de Exclusões.");
+        items.push(...data);
+        if (data.length < 250) break;
+        lastId = data.at(-1).id;
+      }
+      return json({ actor, items });
+    }
+
+    if (body.action === "RESTORE") {
+      if (!Number.isSafeInteger(body.id) || body.id < 1) return json({ error: "Registro inválido." }, 400);
+      const { error } = await exclusions().update({ restaurado_em: new Date().toISOString(), restaurado_por: user.id })
+        .eq("empresa_id", profile.empresa_id).eq("id", body.id).is("restaurado_em", null);
+      if (error) throw problem(503, "Não foi possível restaurar a mensagem.");
+      return json({ restored: true });
+    }
+
+    async function exclude(item) {
+      const { error } = await exclusions().insert({
+        empresa_id: profile.empresa_id, excluido_por: user.id, excluido_por_nome: actor, ...item
+      });
+      if (error && error.code !== "23505") throw problem(503, "Não foi possível mover a mensagem.");
+      return json({ excluded: true });
+    }
+
+    if (body.action === "EXCLUDE" && body.canal === "whatsapp") {
+      const messageId = typeof body.messageId === "string" ? body.messageId : "";
+      if (!messageId || messageId.length > 500) return json({ error: "Mensagem inválida." }, 400);
+
+      const { data: state, error } = await db.from("whatsapp_inbox_state").select("estado")
+        .eq("empresa_id", profile.empresa_id).maybeSingle();
+      if (error) throw problem(503, "Não foi possível consultar o WhatsApp.");
+      const message = state?.estado?.whatsappInboxMessages?.find(item => item.id === messageId);
+      if (!message) return json({ error: "Mensagem não encontrada nesta empresa." }, 404);
+      return await exclude({
+        canal: "whatsapp", chave: message.id, conversa: message.threadId,
+        evento_em: message.at || null,
+        descricao: typeof message.text === "string" && message.text.trim() ? message.text.slice(0, 120) : "Mensagem de WhatsApp"
+      });
+    }
+    if (body.action === "EXCLUDE" && body.canal !== "email") return json({ error: "Canal inválido." }, 400);
     const token = env("FORTE_ATENDE_HOSTINGER_MAIL_TOKEN");
     if (!token) return json({ error: "Falta autorizar a Hostinger no servidor do FORTE ATENDE." }, 503);
 
@@ -115,6 +166,15 @@ Deno.serve(async req => {
     if (!Number.isSafeInteger(body.uid) || body.uid < 1) return json({ error: "Mensagem inválida." }, 400);
     const messagePath = inbox + "/" + body.uid;
     const { data: message } = await provider(messagePath, token);
+    if (body.action === "EXCLUDE") {
+      if (!message.messageId || body.messageId !== message.messageId) {
+        return json({ error: "Atualize a lista e abra a mensagem novamente." }, 409);
+      }
+      return await exclude({
+        canal: "email", chave: body.uid + ":" + message.messageId,
+        descricao: (message.subject || "(Sem assunto)").slice(0, 120)
+      });
+    }
     if (body.action === "OPEN") {
       const { data: contents } = await provider(messagePath + "/text", token);
       return json({ ...summary(message), text: (contents.text || "").slice(0, 150000),
