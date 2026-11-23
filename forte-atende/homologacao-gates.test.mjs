@@ -87,3 +87,13 @@ test("icones declarados sao arquivos validos, nao apenas caminhos",()=>{
   }else assert.fail("Tipo de icone nao suportado: "+icon.type);
  }
 });
+
+test("caixa real expõe paginação antiga usando a mesma API persistida no Operacional",()=>{
+ const html=readFileSync(join(root,"caixa-real.html"),"utf8");
+ assert.match(html,/id="historicoAntigo"/);
+ assert.match(html,/Carregar mensagens antigas/);
+ assert.match(html,/beforeMessageId:oldest\.id/);
+ assert.match(html,/loadedMessages\.set\(message\.id, message\)/);
+ assert.match(html,/olderHasMore = Boolean\(page\.hasMore\)/);
+ assert.doesNotMatch(html,/localStorage\.setItem\([^)]*mensag/i);
+});
