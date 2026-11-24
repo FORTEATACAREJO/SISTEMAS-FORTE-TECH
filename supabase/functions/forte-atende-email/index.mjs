@@ -169,7 +169,7 @@ Deno.serve(async req => {
       const phone = normalizePhone(body.phone);
       const status = body.status;
       const motivo = typeof body.motivo === "string" ? body.motivo.trim().slice(0,200) : "";
-      if (!/^[1-9]\\d{7,14}$/.test(phone) || !["ativo","descartado","bloqueado"].includes(status) ||
+      if (!/^[1-9]\d{7,14}$/.test(phone) || !["ativo","descartado","bloqueado"].includes(status) ||
           (status !== "ativo" && !motivo)) return json({error:"Confira número, situação e motivo."},400);
       const { data: state, error: stateError } = await db.from("whatsapp_inbox_state")
         .select("threads:estado->whatsappInboxThreads").eq("empresa_id",profile.empresa_id).maybeSingle();
