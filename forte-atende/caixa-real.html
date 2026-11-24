@@ -841,7 +841,11 @@ async function changeContactStatus(status) {
 }
 $("salvarContato").onclick = () => exclusive(async () => {
  await changeContactStatus("ativo");
- $("localizarClienteConversa").click();
+ const search = selectedPhone || $("contato").textContent.trim();
+ $("buscaCliente").value = search;
+ selectChannel("clientes");
+ $("clientesStatus").textContent = "Confira o cadastro no FORTE OP antes de vincular.";
+ if (search.length >= 2) setTimeout(() => $("buscarClientes").requestSubmit(), 0);
 },$("statusConversa"));
 $("descartarContato").onclick = () => exclusive(() => changeContactStatus("descartado"),$("statusConversa"));
 $("bloquearContato").onclick = () => exclusive(() => changeContactStatus("bloqueado"),$("statusConversa"));
