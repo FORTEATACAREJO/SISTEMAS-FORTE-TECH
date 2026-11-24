@@ -130,7 +130,11 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
         <section id="conversa" aria-labelledby="contato" hidden>
           <div class="conversation-head">
             <button id="voltar" class="quiet" type="button">Voltar</button>
-            <h2 id="contato"></h2>\n            <button id="localizarClienteConversa" class="quiet" type="button">Buscar no FORTE OP</button>\n            <button id="salvarContato" class="quiet" type="button">Salvar contato</button>\n            <button id="descartarContato" class="quiet" type="button">Descartar</button>\n            <button id="bloquearContato" class="exclude" type="button">Bloquear marketing</button>
+            <h2 id="contato"></h2>
+            <button id="localizarClienteConversa" class="quiet" type="button">Buscar no FORTE OP</button>
+            <button id="salvarContato" class="quiet" type="button">Salvar contato</button>
+            <button id="descartarContato" class="quiet" type="button">Descartar</button>
+            <button id="bloquearContato" class="exclude" type="button">Bloquear marketing</button>
           </div>
           <button id="historicoAntigo" class="quiet" type="button" hidden>Carregar mensagens antigas</button>
           <div id="mensagens" role="region" aria-label="Histórico de mensagens" tabindex="0"></div>
@@ -188,7 +192,9 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
       <header class="panel-head"><h2 id="exclusoesTitle">Caixa de Exclusões</h2><button id="exclusoesAtualizar" class="quiet" type="button">Atualizar</button></header>
       <div class="panel-body">
         <p id="exclusoesStatus" class="status" role="status"></p>
-        <div id="exclusoesLista"></div>\n        <h3 style="margin-top:18px">Contatos bloqueados ou descartados</h3>\n        <div id="moderacaoLista"></div>
+        <div id="exclusoesLista"></div>
+        <h3 style="margin-top:18px">Contatos bloqueados ou descartados</h3>
+        <div id="moderacaoLista"></div>
       </div>
     </section>
   </section>
@@ -433,7 +439,8 @@ async function showThread(threadId, version = null) {
   const page = await callInbox("INBOX_MESSAGES", { threadId });
   if (selected !== threadId || (version !== null && version !== viewVersion)) return;
   if ($("statusConversa").textContent === "Carregando conversa...") $("statusConversa").textContent = "";
-  $("contato").textContent = contactName(page.thread);\n  selectedPhone = page.thread.phone || selectedPhone;
+  $("contato").textContent = contactName(page.thread);
+  selectedPhone = page.thread.phone || selectedPhone;
   void markRead(threadId, page).catch(() => {
     if (selected === threadId && !$("statusConversa").textContent) {
       $("statusConversa").textContent = "Não foi possível marcar como lida. A caixa tentará novamente.";
@@ -1083,7 +1090,9 @@ async function refreshEmailAutomatically() {
   }
 }
 document.addEventListener("visibilitychange", refreshWhatsApp);
-setInterval(refreshWhatsApp, 10000);\nsetInterval(refreshEmailAutomatically, 15000);\ndocument.addEventListener("visibilitychange", refreshEmailAutomatically);
+setInterval(refreshWhatsApp, 10000);
+setInterval(refreshEmailAutomatically, 15000);
+document.addEventListener("visibilitychange", refreshEmailAutomatically);
 await load();
 </script>
 <script>
