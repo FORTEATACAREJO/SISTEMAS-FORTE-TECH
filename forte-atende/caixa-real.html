@@ -379,14 +379,15 @@ function conversationRow(title, preview, date, unread = 0) {
 async function showList(reset = true, version = null, ready = null) {
   const list = $("conversas");
   if (version === null && !$("conversas").children.length) $("status").textContent = "Consultando WhatsApp...";
-  const page = await callInbox("INBOX_LIST", { offset: reset ? 0 : offset });
+  const [page] = await Promise.all([callInbox("INBOX_LIST", { offset: reset ? 0 : offset }),loadContactModeration()]);
   if (ready) await ready;
   if (version !== null && (version !== viewVersion || selected)) return;
   const hiddenPreviews = new Set(Array.from(exclusions.values())
     .filter(item => item.canal === "whatsapp" && item.evento_em)
     .map(item => item.conversa + ":" + Date.parse(item.evento_em)));
   const previewFor = thread => hiddenPreviews.has(thread.id + ":" + Date.parse(thread.lastAt)) ? "" : thread.preview || "";
-  const snapshot = JSON.stringify([page.total, page.threads.map(thread => [thread.id, thread.name, thread.phone, thread.unread, thread.lastAt, previewFor(thread)])]);
+  const allowedThreads = page.threads.filter(thread => !["bloqueado","descartado"].includes(contactModeration.get(contactPhoneKey(thread.phone))?.status));
+  const snapshot = JSON.stringify([page.total, allowedThreads.map(thread => [thread.id, thread.name, thread.phone, thread.unread, thread.lastAt, previewFor(thread)])]);
   const status = $("status");
   status.className = "status";
   const label = page.total + (page.total === 1 ? " conversa" : " conversas");
@@ -405,7 +406,7 @@ async function showList(reset = true, version = null, ready = null) {
     offset = 0;
   }
   $("listaWhatsApp").hidden = false;
-  for (const thread of page.threads) {
+  for (const thread of allowedThreads) {
     const title = contactName(thread);
     const preview = previewFor(thread);
     const button = conversationRow(title, preview, thread.lastAt, thread.unread);
@@ -828,6 +829,10 @@ async function customerConversation(customer, channel) {
   }
 }
 
+function contactPhoneKey(phone) {
+ const digits = String(phone || "").replace(/\D/g,"");
+ return "+" + (digits.startsWith("55") ? digits : (digits.length === 10 || digits.length === 11 ? "55"+digits : digits));
+}
 const contactModeration = new Map();
 async function loadContactModeration() {
  const {items} = await callEmail("CONTACT_MODERATION_LIST");
@@ -845,6 +850,7 @@ async function changeContactStatus(status) {
  if (motivo === null || !motivo.trim()) return;
  await callEmail("CONTACT_MODERATE",{phone,status,motivo});
  await loadContactModeration();
+ listSnapshot = "";
  $("statusConversa").textContent = "Decisão registrada. As mensagens anteriores foram preservadas.";
 }
 $("salvarContato").onclick = () => exclusive(async () => {
