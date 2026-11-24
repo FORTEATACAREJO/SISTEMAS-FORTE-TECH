@@ -130,7 +130,7 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
         <section id="conversa" aria-labelledby="contato" hidden>
           <div class="conversation-head">
             <button id="voltar" class="quiet" type="button">Voltar</button>
-            <h2 id="contato"></h2>\n            <button id="localizarClienteConversa" class="quiet" type="button">Buscar no FORTE OP</button>
+            <h2 id="contato"></h2>\n            <button id="localizarClienteConversa" class="quiet" type="button">Buscar no FORTE OP</button>\n            <button id="salvarContato" class="quiet" type="button">Salvar contato</button>\n            <button id="descartarContato" class="quiet" type="button">Descartar</button>\n            <button id="bloquearContato" class="exclude" type="button">Bloquear marketing</button>
           </div>
           <button id="historicoAntigo" class="quiet" type="button" hidden>Carregar mensagens antigas</button>
           <div id="mensagens" role="region" aria-label="Histórico de mensagens" tabindex="0"></div>
@@ -188,7 +188,7 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
       <header class="panel-head"><h2 id="exclusoesTitle">Caixa de Exclusões</h2><button id="exclusoesAtualizar" class="quiet" type="button">Atualizar</button></header>
       <div class="panel-body">
         <p id="exclusoesStatus" class="status" role="status"></p>
-        <div id="exclusoesLista"></div>
+        <div id="exclusoesLista"></div>\n        <h3 style="margin-top:18px">Contatos bloqueados ou descartados</h3>\n        <div id="moderacaoLista"></div>
       </div>
     </section>
   </section>
@@ -820,6 +820,50 @@ async function customerConversation(customer, channel) {
   }
 }
 
+const contactModeration = new Map();
+async function loadContactModeration() {
+ const {items} = await callEmail("CONTACT_MODERATION_LIST");
+ contactModeration.clear();
+ for (const item of items) contactModeration.set(item.telefone_e164,item);
+ return items;
+}
+async function changeContactStatus(status) {
+ const phone = selectedPhone;
+ if (!phone) { $("statusConversa").textContent = "Esta conversa não tem número identificável."; return; }
+ const labels = {ativo:"Salvar/reativar",descartado:"Descartar",bloqueado:"Bloquear"};
+ if (!confirm(labels[status] + " o contato " + phone + "? O histórico será preservado.")) return;
+ const motivo = status === "ativo" ? "Contato confirmado pelo operador" :
+   prompt("Motivo da decisão:",status === "bloqueado" ? "Marketing/spam" : "Contato não cadastrado");
+ if (motivo === null || !motivo.trim()) return;
+ await callEmail("CONTACT_MODERATE",{phone,status,motivo});
+ await loadContactModeration();
+ $("statusConversa").textContent = "Decisão registrada. As mensagens anteriores foram preservadas.";
+}
+$("salvarContato").onclick = () => exclusive(async () => {
+ await changeContactStatus("ativo");
+ $("localizarClienteConversa").click();
+},$("statusConversa"));
+$("descartarContato").onclick = () => exclusive(() => changeContactStatus("descartado"),$("statusConversa"));
+$("bloquearContato").onclick = () => exclusive(() => changeContactStatus("bloqueado"),$("statusConversa"));
+async function showModeratedContacts() {
+ const items = await loadContactModeration();
+ const list = $("moderacaoLista");
+ list.replaceChildren();
+ for (const item of items.filter(item => item.status !== "ativo")) {
+   const row = t("div","");
+   row.className = "exclusion-row";
+   row.append(t("span",item.telefone_e164+" · "+item.status+" · "+(item.motivo||"")));
+   const button = t("button","Reativar");
+   button.className = "quiet";
+   button.onclick = () => exclusive(async () => {
+     if (!confirm("Reativar "+item.telefone_e164+"?")) return;
+     await callEmail("CONTACT_MODERATE",{phone:item.telefone_e164,status:"ativo",motivo:"Reativado pelo operador"});
+     await showModeratedContacts();
+   },$("exclusoesStatus"));
+   row.append(button);
+   list.append(row);
+ }
+}
 $("localizarClienteConversa").onclick = () => {
   // Consulta o cadastro existente, sem criar duplicatas ou alterar dados do FORTE OP.
   const search = selectedPhone || $("contato").textContent.trim();
@@ -890,9 +934,9 @@ $("tabEmail").onclick = () => {
 };
 $("tabExclusoes").onclick = () => {
   selectChannel("exclusoes");
-  void exclusive(showExclusions, $("exclusoesStatus"));
+  void exclusive(async () => { await showExclusions(); await showModeratedContacts(); }, $("exclusoesStatus"));
 };
-$("exclusoesAtualizar").onclick = () => exclusive(showExclusions, $("exclusoesStatus"));
+$("exclusoesAtualizar").onclick = () => exclusive(async () => { await showExclusions(); await showModeratedContacts(); }, $("exclusoesStatus"));
 $("emailExcluir").onclick = () => exclusive(async () => {
   const { uid, messageId } = emailMessage;
   if (!await confirmExclusion({ canal: "email", uid, messageId })) return;
