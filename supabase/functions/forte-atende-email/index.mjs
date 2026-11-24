@@ -154,10 +154,35 @@ Deno.serve(async req => {
     if (raw.length > 80000) return json({ error: "Requisição muito grande." }, 413);
     let body;
     try { body = JSON.parse(raw); } catch { return json({ error: "Requisição inválida." }, 400); }
-    if (!["LIST", "OPEN", "REPLY", "EXCLUSIONS", "EXCLUDE", "RESTORE", "CLIENT_SEARCH", "CLIENT_WHATSAPP", "CLIENT_EMAILS", "CLIENT_SEND"].includes(body?.action)) {
+    if (!["LIST", "OPEN", "REPLY", "EXCLUSIONS", "EXCLUDE", "RESTORE", "CLIENT_SEARCH", "CLIENT_WHATSAPP", "CLIENT_EMAILS", "CLIENT_SEND", "CONTACT_MODERATE", "CONTACT_MODERATION_LIST"].includes(body?.action)) {
       return json({ error: "Ação inválida." }, 400);
     }
 
+    if (body.action === "CONTACT_MODERATION_LIST") {
+      const { data, error } = await db.from("forte_atende_contatos_moderacao")
+        .select("telefone_e164,status,motivo,alterado_em")
+        .eq("empresa_id",profile.empresa_id).order("alterado_em",{ascending:false}).limit(200);
+      if (error) throw problem(503,"Não foi possível consultar a moderação de contatos.");
+      return json({items:data});
+    }
+    if (body.action === "CONTACT_MODERATE") {
+      const phone = normalizePhone(body.phone);
+      const status = body.status;
+      const motivo = typeof body.motivo === "string" ? body.motivo.trim().slice(0,200) : "";
+      if (!/^[1-9]\\d{7,14}$/.test(phone) || !["ativo","descartado","bloqueado"].includes(status) ||
+          (status !== "ativo" && !motivo)) return json({error:"Confira número, situação e motivo."},400);
+      const { data: state, error: stateError } = await db.from("whatsapp_inbox_state")
+        .select("threads:estado->whatsappInboxThreads").eq("empresa_id",profile.empresa_id).maybeSingle();
+      if (stateError) throw problem(503,"Não foi possível conferir a conversa.");
+      if (!(state?.threads || []).some(thread => normalizePhone(thread.phone) === phone)) {
+        return json({error:"Número não encontrado nas conversas desta empresa."},404);
+      }
+      const {error} = await db.rpc("forte_atende_moderar_contato",{
+        p_empresa:profile.empresa_id,p_telefone:"+"+phone,p_status:status,p_motivo:motivo,p_usuario:user.id
+      });
+      if (error) throw problem(503,"Não foi possível registrar a decisão.");
+      return json({saved:true,status});
+    }
     let customer;
     const compose = body.action === "CLIENT_SEND";
     const text = typeof body.text === "string" ? body.text.trim() : "";
