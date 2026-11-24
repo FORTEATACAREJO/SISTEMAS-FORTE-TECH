@@ -130,7 +130,7 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
         <section id="conversa" aria-labelledby="contato" hidden>
           <div class="conversation-head">
             <button id="voltar" class="quiet" type="button">Voltar</button>
-            <h2 id="contato"></h2>
+            <h2 id="contato"></h2>\n            <button id="localizarClienteConversa" class="quiet" type="button">Buscar no FORTE OP</button>
           </div>
           <button id="historicoAntigo" class="quiet" type="button" hidden>Carregar mensagens antigas</button>
           <div id="mensagens" role="region" aria-label="Histórico de mensagens" tabindex="0"></div>
@@ -244,7 +244,7 @@ const delivery = {
   SENDING: "Enviando", SENT: "Aceita pela Meta", DELIVERED: "Entregue", READ: "Lida",
   FAILED: "Falha no envio", UNCERTAIN: "Envio incerto"
 };
-let selected = null;
+let selected = null;\nlet selectedPhone = "";
 let offset = 0;
 let listHasMore = false;
 let listSnapshot = "";
@@ -432,7 +432,7 @@ async function showThread(threadId, version = null) {
   const page = await callInbox("INBOX_MESSAGES", { threadId });
   if (selected !== threadId || (version !== null && version !== viewVersion)) return;
   if ($("statusConversa").textContent === "Carregando conversa...") $("statusConversa").textContent = "";
-  $("contato").textContent = contactName(page.thread);
+  $("contato").textContent = contactName(page.thread);\n  selectedPhone = page.thread.phone || selectedPhone;
   void markRead(threadId, page).catch(() => {
     if (selected === threadId && !$("statusConversa").textContent) {
       $("statusConversa").textContent = "Não foi possível marcar como lida. A caixa tentará novamente.";
@@ -820,6 +820,14 @@ async function customerConversation(customer, channel) {
   }
 }
 
+$("localizarClienteConversa").onclick = () => {
+  // Consulta o cadastro existente, sem criar duplicatas ou alterar dados do FORTE OP.
+  const search = selectedPhone || $("contato").textContent.trim();
+  $("buscaCliente").value = search;
+  selectChannel("clientes");
+  $("clientesStatus").textContent = "Confira os dados do cliente antes de vincular o contato.";
+  if (search.length >= 2) $("buscarClientes").requestSubmit();
+};
 $("tabClientes").onclick = () => selectChannel("clientes");
 $("buscarClientes").addEventListener("submit", event => {
   event.preventDefault();
