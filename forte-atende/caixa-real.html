@@ -992,8 +992,41 @@ async function refreshWhatsApp() {
   }
 }
 
+// Atualização discreta da lista de e-mails: não fecha mensagens abertas,
+// não apaga rascunhos nem substitui páginas já carregadas.
+let emailRefreshing = false;
+let emailSnapshot = "";
+async function refreshEmailAutomatically() {
+  if (document.hidden || busy || emailRefreshing || $("inbox").style.display !== "block" ||
+      $("email").hidden || !$("emailMensagem").hidden || emailPage !== 1) return;
+  const version = viewVersion;
+  emailRefreshing = true;
+  try {
+    const data = await callEmail("LIST", { page: 1 });
+    if (version !== viewVersion || $("email").hidden || !$("emailMensagem").hidden || busy) return;
+    const visible = data.messages.filter(message => !exclusions.has(exclusionKey("email", message.uid + ":" + message.messageId)));
+    const snapshot = JSON.stringify(visible.map(message => [message.uid, message.messageId, message.subject, message.date]));
+    if (snapshot === emailSnapshot) return;
+    const list = $("emailLista");
+    const fragment = document.createDocumentFragment();
+    for (const message of visible) {
+      const button = conversationRow(message.subject || "(Sem assunto)", message.from, message.date);
+      button.onclick = () => exclusive(() => openEmail(message.uid), $("emailStatus"));
+      fragment.append(button);
+    }
+    list.replaceChildren(fragment);
+    emailRows = data.messages.length;
+    emailSnapshot = snapshot;
+    $("emailMais").hidden = !data.messages.length || emailRows >= Number(data.total || 0);
+    $("emailStatus").textContent = list.children.length + " e-mail(s) exibidos · atualização automática";
+  } catch {
+    // Não sobrescrever mensagens ou rascunhos se a conexão falhar.
+  } finally {
+    emailRefreshing = false;
+  }
+}
 document.addEventListener("visibilitychange", refreshWhatsApp);
-setInterval(refreshWhatsApp, 10000);
+setInterval(refreshWhatsApp, 10000);\nsetInterval(refreshEmailAutomatically, 15000);\ndocument.addEventListener("visibilitychange", refreshEmailAutomatically);
 await load();
 </script>
 <script>
