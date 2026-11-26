@@ -83,6 +83,32 @@ main{max-width:940px;margin:0 auto;padding:20px 16px 32px}
 .compose-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:12px}
 #clienteEnvioResultado{padding-left:20px}
 #clienteEnvioResultado:empty{display:none}
+
+/* Revisão de legibilidade e navegação responsiva */
+:root{--ink:#14212e;--muted:#425466;--line:#c1ccd6;--teal:#146c43;background:#f0f4f8;font-size:16px;line-height:1.5}
+body{color:var(--ink)}
+main,.header-inner{max-width:1200px}
+button{font-weight:650;min-height:48px}
+input,textarea{font-size:1rem;background:#fff;border-color:#77899b}
+input::placeholder,textarea::placeholder{color:#536477;opacity:1}
+small,.muted,.thread-preview,.thread-meta,.panel-head p,.status:not(:empty){color:var(--muted);font-size:.9rem}
+.channel{color:#23364a;border-color:#a9b8c7}
+#tabWhatsApp[aria-pressed="true"]{background:#146c43;color:#fff;border-color:#146c43}
+#tabEmail[aria-pressed="true"]{background:#174ea6;color:#fff;border-color:#174ea6}
+#tabClientes[aria-pressed="true"],#tabExclusoes[aria-pressed="true"]{background:#243b53;color:#fff;border-color:#243b53}
+.quiet{background:#e8f0f8;border-color:#a9bfd4;color:#163b63}
+.thread{min-height:72px;border-bottom-color:#d4dde5}
+.thread-name{font-size:1rem;color:#14212e}
+.thread:has(.badge){background:#e8f5ed;border-left:4px solid #146c43}
+.badge{font-size:.85rem;font-weight:750}
+.msg{font-size:1rem;line-height:1.55;border:1px solid #cbd7df}
+.msg small{font-size:.85rem}
+.conversation-head h2{flex:1 1 180px}
+.conversation-head button{margin-top:0}
+#emailEnviar{background:#174ea6}
+button:disabled{opacity:1;background:#e1e7ed;color:#526173;border-color:#aebbc8;cursor:not-allowed}
+:focus-visible{outline:3px solid #174ea6;outline-offset:3px}
+@media(max-width:540px){.channel{font-size:.95rem;padding:10px 6px}.header-inner{flex-wrap:wrap}.app-title{min-width:120px}.conversation-head button{flex:1 1 42%}.conversation-head h2{flex-basis:100%}.thread-meta{font-size:.8rem}.msg{max-width:96%}.customer-form{flex-wrap:wrap}.customer-form label{flex-basis:100%}}
 </style>
 </head>
 <body>
