@@ -412,7 +412,7 @@ async function showList(reset = true, version = null, ready = null) {
     .filter(item => item.canal === "whatsapp" && item.evento_em)
     .map(item => item.conversa + ":" + Date.parse(item.evento_em)));
   const previewFor = thread => hiddenPreviews.has(thread.id + ":" + Date.parse(thread.lastAt)) ? "" : thread.preview || "";
-  const allowedThreads = page.threads.filter(thread => !["bloqueado","descartado"].includes(contactModeration.get(contactPhoneKey(thread.phone))?.status));
+  const allowedThreads = page.threads.filter(thread => contactModeration.get(contactPhoneKey(thread.phone))?.status !== "bloqueado");
   const snapshot = JSON.stringify([page.total, allowedThreads.map(thread => [thread.id, thread.name, thread.phone, thread.unread, thread.lastAt, previewFor(thread)])]);
   const status = $("status");
   status.className = "status";
@@ -449,6 +449,7 @@ async function showList(reset = true, version = null, ready = null) {
 
 async function openThread(thread) {
   selected = thread.id;
+  selectedPhone = thread.phone || "";
   threadSnapshot = "";
   loadedMessages.clear(); olderHasMore = false; historyInitialized = false;
   $("listaWhatsApp").hidden = true;
@@ -856,8 +857,9 @@ async function customerConversation(customer, channel) {
 }
 
 function contactPhoneKey(phone) {
- const digits = String(phone || "").replace(/\D/g,"");
- return "+" + (digits.startsWith("55") ? digits : (digits.length === 10 || digits.length === 11 ? "55"+digits : digits));
+ const raw = String(phone || "").trim();
+ const digits = raw.replace(/\D/g,"");
+ return "+" + (!raw.startsWith("+") && [10,11].includes(digits.length) ? "55"+digits : digits);
 }
 const contactModeration = new Map();
 async function loadContactModeration() {
@@ -878,9 +880,10 @@ async function changeContactStatus(status) {
  await loadContactModeration();
  listSnapshot = "";
  $("statusConversa").textContent = "Decisão registrada. As mensagens anteriores foram preservadas.";
+ return true;
 }
 $("salvarContato").onclick = () => exclusive(async () => {
- await changeContactStatus("ativo");
+ if (!await changeContactStatus("ativo")) return;
  const search = selectedPhone || $("contato").textContent.trim();
  $("buscaCliente").value = search;
  selectChannel("clientes");
@@ -888,7 +891,7 @@ $("salvarContato").onclick = () => exclusive(async () => {
  if (search.length >= 2) setTimeout(() => $("buscarClientes").requestSubmit(), 0);
 },$("statusConversa"));
 $("descartarContato").onclick = () => exclusive(() => changeContactStatus("descartado"),$("statusConversa"));
-$("bloquearContato").onclick = () => exclusive(() => changeContactStatus("bloqueado"),$("statusConversa"));
+$("bloquearContato").onclick = () => exclusive(async () => { if (await changeContactStatus("bloqueado")) await showList(); },$("statusConversa"));
 async function showModeratedContacts() {
  const items = await loadContactModeration();
  const list = $("moderacaoLista");
