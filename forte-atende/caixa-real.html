@@ -248,6 +248,7 @@ button:disabled{opacity:1;background:#e1e7ed;color:#526173;border-color:#aebbc8;
     </div>
   </form>
 </dialog>
+<script src="./notificacoes.js" defer></script>
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 
@@ -292,6 +293,13 @@ let pending = null;
 let exclusions = new Map();
 let exclusionActor = "";
 const readRequests = new Map();
+let badgeRefreshing = false;
+let badgeEpoch = 0;
+function applyInboxUnread(page) {
+  if (Number.isSafeInteger(page?.unread) && page.unread >= 0) {
+    void window.FORTE_ATENDE_NOTIFICACOES?.atualizarNaoLidas(page.unread);
+  }
+}
 const controls = ["atualizar", "sair", "enviar", "mais", "voltar", "emailEnviar", "emailAtualizar", "emailMais", "emailVoltar", "tabWhatsApp", "tabEmail", "tabClientes", "tabExclusoes", "pesquisarCliente", "exclusoesAtualizar", "emailExcluir", "historicoAntigo"];
 
 async function exclusive(task, status) {
@@ -403,11 +411,13 @@ function conversationRow(title, preview, date, unread = 0) {
 }
 
 async function showList(reset = true, version = null, ready = null) {
+  const epoch = badgeEpoch;
   const list = $("conversas");
   if (version === null && !$("conversas").children.length) $("status").textContent = "Consultando WhatsApp...";
   const [page] = await Promise.all([callInbox("INBOX_LIST", { offset: reset ? 0 : offset }),loadContactModeration()]);
   if (ready) await ready;
   if (version !== null && (version !== viewVersion || selected)) return;
+  if (epoch === badgeEpoch) applyInboxUnread(page);
   const hiddenPreviews = new Set(Array.from(exclusions.values())
     .filter(item => item.canal === "whatsapp" && item.evento_em)
     .map(item => item.conversa + ":" + Date.parse(item.evento_em)));
@@ -538,6 +548,7 @@ async function markRead(threadId, page) {
     await callInbox("INBOX_UPDATE", { threadId, markRead: true });
     const row = Array.from($("conversas").children).find(item => item.dataset.thread === threadId);
     row?.querySelector(".badge")?.remove();
+    void refreshUnreadBadge(true);
     listSnapshot = "";
     if ($("statusConversa").textContent === "Não foi possível marcar como lida. A caixa tentará novamente.") {
       $("statusConversa").textContent = "";
@@ -549,6 +560,7 @@ async function markRead(threadId, page) {
 
 async function load() {
   const { data: { session } } = await db.auth.getSession();
+  if (!session) void window.FORTE_ATENDE_NOTIFICACOES?.atualizarNaoLidas(0);
   $("login").style.display = session ? "none" : "block";
   $("inbox").style.display = session ? "block" : "none";
   $("sair").hidden = !session;
@@ -1046,6 +1058,8 @@ $("voltar").onclick = () => {
 $("sair").onclick = () => exclusive(async () => {
   const { error } = await db.auth.signOut();
   if (error) throw Error("Não foi possível sair. Tente novamente.");
+  badgeEpoch += 1;
+  void window.FORTE_ATENDE_NOTIFICACOES?.atualizarNaoLidas(0);
   pending = selected = null;
   threadSnapshot = listSnapshot = "";
   loadedMessages.clear(); olderHasMore = false; historyInitialized = false;
@@ -1077,6 +1091,22 @@ $("sair").onclick = () => exclusive(async () => {
   $("login").style.display = "block";
   $("inbox").style.display = "none";
 }, selected ? $("statusConversa") : $("status"));
+async function refreshUnreadBadge(force = false) {
+  if (document.hidden || badgeRefreshing || (!force && busy) || $("inbox").style.display !== "block") return;
+  // A API devolve o total global de mensagens WhatsApp não lidas, não apenas a página carregada.
+  // Sem cache compartilhado: a leitura é sempre autenticada e vinculada à empresa da sessão.
+  if (!force && !selected && !$("whatsapp").hidden) return;
+  const epoch = badgeEpoch;
+  badgeRefreshing = true;
+  try {
+    const page = await callInbox("INBOX_LIST", { offset: 0 });
+    if (epoch === badgeEpoch && $("inbox").style.display === "block") applyInboxUnread(page);
+  } catch {
+    // Em falhas de rede, conservar a última contagem confirmada; nunca inventar um valor.
+  } finally {
+    badgeRefreshing = false;
+  }
+}
 async function refreshWhatsApp() {
   if (document.hidden || busy || refreshing || $("inbox").style.display !== "block" || $("whatsapp").hidden) return;
   const version = viewVersion;
@@ -1126,6 +1156,8 @@ async function refreshEmailAutomatically() {
 }
 document.addEventListener("visibilitychange", refreshWhatsApp);
 setInterval(refreshWhatsApp, 10000);
+document.addEventListener("visibilitychange", refreshUnreadBadge);
+setInterval(refreshUnreadBadge, 30000);
 setInterval(refreshEmailAutomatically, 15000);
 document.addEventListener("visibilitychange", refreshEmailAutomatically);
 await load();
