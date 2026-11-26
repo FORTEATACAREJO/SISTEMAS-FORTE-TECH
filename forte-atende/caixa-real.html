@@ -1156,7 +1156,7 @@ async function refreshEmailAutomatically() {
 }
 document.addEventListener("visibilitychange", refreshWhatsApp);
 setInterval(refreshWhatsApp, 10000);
-document.addEventListener("visibilitychange", refreshUnreadBadge);
+document.addEventListener("visibilitychange", () => void refreshUnreadBadge());
 setInterval(refreshUnreadBadge, 30000);
 setInterval(refreshEmailAutomatically, 15000);
 document.addEventListener("visibilitychange", refreshEmailAutomatically);
