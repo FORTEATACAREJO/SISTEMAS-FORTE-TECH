@@ -1,0 +1,30 @@
+name: FORTE ATENDE - Portao de homologacao
+on:
+  push:
+    branches:
+      - feature/forte-atende-email-20261120
+    paths:
+      - 'forte-atende/**'
+      - '.github/workflows/forte-atende-homologacao.yml'
+  pull_request:
+    branches:
+      - main
+      - feature/forte-atende-email-20261120
+    paths:
+      - 'forte-atende/**'
+      - '.github/workflows/forte-atende-homologacao.yml'
+  workflow_dispatch:
+jobs:
+  verificacao:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar regras de seguranca e requisitos PWA
+        run: node --test forte-atende/homologacao-gates.test.mjs forte-atende/notificacoes.test.mjs
+      - name: Testar integracoes sem envios reais
+        run: node --test forte-atende/plugins/*.test.mjs forte-atende/multicanal/*.test.mjs forte-atende/email/*.test.mjs forte-atende/campanhas/*.test.mjs forte-atende/config/*.test.mjs

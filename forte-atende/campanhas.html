@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>FORTE ATENDE | Campanhas promocionais — Homologação</title>
+<style>
+:root{--ink:#163246;--navy:#142e40;--aqua:#0c867e;--bg:#f4f7f9;--line:#d7e3e9;--muted:#58717d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:24px max(20px,calc((100vw - 1130px)/2));color:white;background:var(--navy)}
+header h1{font-size:25px;margin:0}header p{color:#d6e7ed;margin:4px 0}
+main{max-width:1170px;margin:auto;padding:20px 18px 45px}
+.notice{background:#fff9e8;border:1px solid #e9d29d;border-radius:12px;padding:15px 17px;margin-bottom:16px}
+h2{font-size:19px;margin:0 0 12px}h3{font-size:15px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:1.05fr 1fr;gap:16px}.card{background:white;border:1px solid var(--line);border-radius:13px;padding:20px;margin-bottom:16px}
+label{display:block;font-weight:650;margin:12px 0 5px}
+input:not([type="checkbox"]),select,textarea{width:100%;padding:11px;border:1px solid #b9cbd4;border-radius:8px;font:inherit;background:white;color:var(--ink)}
+textarea{min-height:120px;resize:vertical}
+.group{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:10px;margin:7px 0;font-weight:500}
+.group input{accent-color:var(--aqua);height:17px;width:17px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{border:0;border-radius:9px;padding:12px 16px;font:700 14px system-ui;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #54beb6;outline-offset:2px}
+.primary{background:var(--aqua);color:white}.secondary{background:#e5f0f3;color:var(--navy)}button:disabled{cursor:not-allowed;opacity:.5}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:17px}
+.muted,small{color:var(--muted)}.tag{display:inline-block;background:#e2f3f0;color:#116d63;border-radius:20px;font-size:12px;padding:3px 9px;font-weight:700}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f8fa;border:1px solid var(--line);padding:14px;border-radius:9px;font:13px/1.55 system-ui;min-height:150px}
+.result{background:#f0f8f5;border-left:4px solid var(--aqua);padding:11px 13px;border-radius:7px}
+strong.num{font-size:26px;display:block}.status{padding:10px;margin-top:9px;border:1px dashed #b2c9d2;border-radius:8px}
+ul{padding-left:22px}p{margin:5px 0 14px}
+@media(max-width:800px){.grid,.two{grid-template-columns:1fr}.card{padding:15px}}
+</style></head>
+<body>
+<header><h1>FORTE ATENDE</h1><p>Campanhas promocionais · Listas de transmissão</p><span class="tag">Homologação — sem envio real</span></header>
+<main>
+<div class="notice"><strong>Esta é uma prévia com clientes fictícios.</strong> Não insira dados de clientes reais nesta demonstração. O envio e agendamento ficam desativados até integrar serviço seguro, aprovações, descadastro e controles do provedor.</div>
+<div class="grid">
+<section>
+<div class="card">
+<h2>1. Escolha os grupos de clientes</h2>
+<p class="muted">Uma campanha para vários clientes; cada pessoa receberá individualmente quando o disparo estiver habilitado.</p>
+<label class="group"><input type="checkbox" name="grupo" value="monte-carmelo" checked> Clientes de Monte Carmelo/MG</label>
+<label class="group"><input type="checkbox" name="grupo" value="caldas-novas"> Clientes de Caldas Novas/GO</label>
+<label class="group"><input type="checkbox" name="grupo" value="revendedores"> Revendedores</label>
+<label class="group"><input type="checkbox" name="grupo" value="construtoras"> Construtoras</label>
+<div class="two"><div><label for="cidade">Filtrar por cidade (opcional)</label><input id="cidade" placeholder="Ex.: Monte Carmelo"></div><div><label for="segmento">Filtrar por perfil (opcional)</label><select id="segmento"><option value="">Todos os perfis</option><option value="revenda">Revenda</option><option value="construtora">Construtora</option></select></div></div>
+<label for="canal">Canal da transmissão</label><select id="canal"><option value="email">E-mail</option><option value="whatsapp">WhatsApp Business (planejado)</option></select>
+<p><small>O sistema verificará o aceite específico de cada cliente para receber ofertas neste canal.</small></p>
+</div>
+<div class="card">
+<h2>2. Monte sua promoção</h2>
+<label for="titulo">Nome da promoção</label><input id="titulo" maxlength="80" value="Ofertas da semana" required>
+<label for="mensagem">Mensagem aos clientes</label><textarea id="mensagem" maxlength="1500">Confira nossos produtos em promoção. Consulte nossa equipe para condições e disponibilidade.</textarea>
+<div class="two"><div><label for="produto">Produto</label><input id="produto" value="Cimento ensacado 50 kg" maxlength="120"></div><div><label for="preco">Preço em reais</label><input id="preco" inputmode="decimal" type="number" min="0.01" step="0.01" placeholder="Informe o preço"></div></div>
+<label for="validade">Validade da promoção (opcional)</label><input id="validade" type="date">
+<p><small>Dados de preços, produtos e validade são informados pelo operador e deverão ser validados antes de enviar.</small></p>
+<div class="actions"><button type="button" class="primary" id="preparar">Preparar campanha</button><button type="button" class="secondary" id="exportar" disabled>Baixar rascunho</button></div>
+</div>
+</section>
+<section>
+<div class="card">
+<h2>3. Confira antes do envio</h2><div class="two"><div class="result"><strong class="num" id="qtd">0</strong>Destinatários aptos</div><div class="result"><strong class="num" id="excluidos">0</strong>Excluídos da lista</div></div>
+<h3 style="margin-top:18px">Prévia da mensagem individual</h3>
+<pre id="previa" aria-live="polite">Escolha os grupos, monte a promoção e selecione “Preparar campanha”.</pre>
+<div class="status" id="situacao">Nenhuma campanha preparada.</div>
+<div class="actions"><button type="button" id="enviar" disabled>Enviar promoção para o grupo</button></div>
+<p class="muted"><small>O botão de envio será liberado somente após implantação do backend com autenticação, aprovação, limites e registro individual de cada disparo.</small></p>
+</div>
+<div class="card">
+<h2>4. Proteção dos clientes</h2>
+<ul><li>Endereços não são revelados a outros clientes.</li><li>Clientes descadastrados ou sem permissão são excluídos.</li><li>Duplicados são removidos antes de preparar.</li><li>Campanhas reais exigem aprovação e registro.</li><li>Descadastro deve ser processado antes de novos disparos.</li></ul>
+<p class="muted">Em um disparo futuro, cada cliente receberá uma mensagem particular, não um grupo público.</p>
+</div>
+</section>
+</div>
+</main>
+<script type="module">
+import { selecionarDestinatarios, prepararMensagem } from "./campanhas/core.mjs";
+// Dados inteiramente fictícios: não há leitura da agenda real nem envio.
+const contatos = [
+  {id:"t1",nome:"Cliente Exemplo A",email:"cliente-a@example.com",telefone:"+5534999990001",grupos:["monte-carmelo","revendedores"],cidade:"Monte Carmelo",uf:"MG",segmento:"revenda",ativo:true,permitePromocoesEmail:true,permitePromocoesWhatsApp:false},
+  {id:"t2",nome:"Cliente Exemplo B",email:"cliente-b@example.com",telefone:"+5534999990002",grupos:["monte-carmelo","construtoras"],cidade:"Monte Carmelo",uf:"MG",segmento:"construtora",ativo:true,permitePromocoesEmail:true,permitePromocoesWhatsApp:true},
+  {id:"t3",nome:"Cliente Exemplo C",email:"cliente-c@example.com",telefone:"+5564999990003",grupos:["caldas-novas","revendedores"],cidade:"Caldas Novas",uf:"GO",segmento:"revenda",ativo:true,permitePromocoesEmail:true,permitePromocoesWhatsApp:true},
+  {id:"t4",nome:"Cliente Exemplo D",email:"cliente-d@example.com",telefone:"+5564999990004",grupos:["caldas-novas"],cidade:"Caldas Novas",uf:"GO",segmento:"revenda",ativo:true,permitePromocoesEmail:false,permitePromocoesWhatsApp:false},
+  {id:"t5",nome:"Cliente Exemplo E",email:"cliente-e@example.com",telefone:"+5534999990005",grupos:["monte-carmelo"],cidade:"Monte Carmelo",uf:"MG",segmento:"revenda",ativo:true,permitePromocoesEmail:true,permitePromocoesWhatsApp:false,descadastrado:true}
+];
+const $ = id => document.getElementById(id);
+let rascunho = null;
+function preparar() {
+  try {
+    const grupos = [...document.querySelectorAll('input[name="grupo"]:checked')].map(el => el.value);
+    const canal = $("canal").value;
+    const filtros = { cidade: $("cidade").value, segmento: $("segmento").value };
+    const publico = selecionarDestinatarios({contatos,grupos,canal,filtros});
+    const valor = $("preco").value;
+    const produtos = $("produto").value.trim() && valor ? [{nome:$("produto").value, preco:Number(valor)}] : [];
+    if (!!$("produto").value.trim() !== !!valor) throw new Error("Preencha produto e preço juntos.");
+    const campanha = {titulo:$("titulo").value,texto:$("mensagem").value,produtos,validade:$("validade").value,canal};
+    const visualizacao = prepararMensagem(campanha, publico.elegiveis[0] || {nome:"Cliente Exemplo",destino:"exemplo@example.com"});
+    $("qtd").textContent=String(publico.totalAptos);
+    $("excluidos").textContent=String(Object.values(publico.excluidos).reduce((a,b)=>a+b,0));
+    $("previa").textContent = visualizacao.assunto + "\n\n" + visualizacao.corpo;
+    $("situacao").textContent = publico.totalAptos
+      ? "Rascunho preparado para " + publico.totalAptos + " cliente(s) fictício(s). Envio não ativado."
+      : "Nenhum cliente fictício elegível com os filtros e a autorização selecionados.";
+    rascunho = {campanha,grupos,filtros,totalElegiveis:publico.totalAptos,exclusoes:publico.excluidos,status:"rascunho_homologacao"};
+    $("exportar").disabled=false;
+  } catch(err) {
+    rascunho=null;$("exportar").disabled=true;$("situacao").textContent="Não foi possível preparar: "+err.message;
+    $("previa").textContent="Revise o formulário.";
+    $("qtd").textContent="0";$("excluidos").textContent="0";
+  }
+}
+$("preparar").addEventListener("click",preparar);
+document.querySelectorAll("input,select,textarea").forEach(input=>input.addEventListener("input",()=>{$("exportar").disabled=true;rascunho=null;$("situacao").textContent="Alterações não preparadas. Clique em Preparar campanha novamente.";}));
+$("exportar").addEventListener("click",()=>{
+  if(!rascunho)return;
+  const url=URL.createObjectURL(new Blob([JSON.stringify(rascunho,null,2)],{type:"application/json"}));
+  const a=document.createElement("a");a.href=url;a.download="forte-atende-campanha-rascunho.json";a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+</script></body></html>
