@@ -3,7 +3,7 @@
 create table if not exists public.forte_atende_contatos_moderacao (
  id uuid primary key default gen_random_uuid(),
  empresa_id uuid not null,
- telefone_e164 text not null check (telefone_e164 ~ '^\\+[1-9][0-9]{7,14}$'),
+ telefone_e164 text not null check (telefone_e164 ~ '^[+][1-9][0-9]{7,14}$'),
  status text not null check (status in ('bloqueado','descartado','ativo')),
  motivo text,
  alterado_por uuid not null,
@@ -33,3 +33,7 @@ revoke all on public.forte_atende_contatos_moderacao_auditoria from anon,authent
 -- permissões e registrar mudança + auditoria em uma única transação.
 -- Nunca filtrar o armazenamento de mensagens recebidas: filtrar apenas
 -- listagem e notificações. Desbloqueio restaura visibilidade do histórico.
+
+revoke all on public.forte_atende_contatos_moderacao, public.forte_atende_contatos_moderacao_auditoria from public,anon,authenticated,service_role;
+grant select,insert,update on public.forte_atende_contatos_moderacao to service_role;
+grant select,insert on public.forte_atende_contatos_moderacao_auditoria to service_role;
