@@ -644,7 +644,7 @@ async function load() {
     $("atendeAdmin").hidden=!atendeAccess.master;$("integracoesLink").hidden=!atendeAccess.master;
     $("tabWhatsApp").hidden=!atendeAccess.whatsapp;$("tabEmail").hidden=!atendeAccess.email;$("tabClientes").hidden=!atendeAccess.master;$("tabExclusoes").hidden=!atendeAccess.master;
     if(atendeAccess.whatsapp)await showList(true,null,loadExclusions().catch(()=>{}));
-    else {$("tabEmail").click();}
+    else {selectChannel("email");await loadExclusions().catch(()=>{});await listEmail();}
   }, $("status"));
 }
 
@@ -1198,7 +1198,7 @@ async function refreshWhatsApp() {
 let emailRefreshing = false;
 let emailSnapshot = "";
 async function refreshEmailAutomatically() {
-  if (document.hidden || busy || emailRefreshing || $("inbox").style.display !== "block" ||
+  if (!atendeAccess?.email || document.hidden || busy || emailRefreshing || $("inbox").style.display !== "block" ||
       $("email").hidden || !$("emailMensagem").hidden || emailPage !== 1) return;
   const version = viewVersion;
   emailRefreshing = true;
