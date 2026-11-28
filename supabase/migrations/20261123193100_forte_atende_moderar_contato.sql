@@ -1,10 +1,10 @@
 -- Mudança de estado + auditoria atômicas, invocadas somente pelo backend service_role.
 create or replace function public.forte_atende_moderar_contato(
  p_empresa uuid, p_telefone text, p_status text, p_motivo text, p_usuario uuid
-) returns void language plpgsql security definer set search_path = '' as $$
+) returns void language plpgsql security invoker set search_path = '' as $$
 declare anterior text;
 begin
- if p_empresa is null or p_usuario is null or p_telefone !~ '^\\+[1-9][0-9]{7,14}$'
+ if not exists(select 1 from public.fc_perfis where empresa_id=p_empresa and user_id=p_usuario and ativo and status_aprovacao='APROVADO' and not trocar_senha and perfil='MASTER') or p_empresa is null or p_usuario is null or p_telefone !~ '^[+][1-9][0-9]{7,14}$'
     or p_status not in ('ativo','descartado','bloqueado') then
    raise exception 'Dados de moderação inválidos';
  end if;
