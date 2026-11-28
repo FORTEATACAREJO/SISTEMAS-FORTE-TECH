@@ -116,6 +116,7 @@ button:disabled{opacity:1;background:#e1e7ed;color:#526173;border-color:#aebbc8;
   <div class="header-inner">
     <img src="./icons/forte-atende-192.png" width="48" height="48" alt="">
     <div class="app-title"><h1>FORTE ATENDE</h1><p>Central de atendimento</p></div>
+    <button id="atendeAdmin" type="button" class="quiet" hidden>Equipe e automação</button>
     <a id="integracoesLink" href="./integracoes.html" hidden style="color:inherit">Integrações</a>
     <button id="sair" type="button" hidden>Sair</button>
   </div>
@@ -140,6 +141,7 @@ button:disabled{opacity:1;background:#e1e7ed;color:#526173;border-color:#aebbc8;
       <button id="tabClientes" class="channel" type="button" aria-pressed="false" aria-controls="clientes">Clientes</button>
       <button id="tabExclusoes" class="channel" type="button" aria-pressed="false" aria-controls="exclusoes">Caixa de Exclusões</button>
     </nav>
+    <section id="atendeAdminPanel" class="card" hidden><h2>Equipe e automação — MASTER</h2><p>Acesso independente de vendas. Autorize somente os funcionários responsáveis pelos canais.</p><div id="atendeAdminUsers"></div><label><input type="checkbox" id="atendeReception"> Recepção automática de novos contatos elegíveis</label><label><input type="checkbox" id="atendeAI"> Triagem por inteligência artificial</label><p id="atendeAIStatus"></p><button id="atendeSaveSettings" type="button">Salvar automação</button><button id="atendeAdminClose" type="button">Voltar</button><p id="atendeAdminStatus" role="status"></p></section>
     <section id="whatsapp" class="card" aria-labelledby="waTitle">
       <header class="panel-head">
         <div><h2 id="waTitle">Conversas WhatsApp</h2><p>(64) 99917-2700</p></div>
@@ -617,6 +619,17 @@ async function markRead(threadId, page) {
   }
 }
 
+let atendeAccess=null,atendeSettings=null;
+async function showAttendanceAdmin(){
+ const data=await callInbox("ATENDE_MANAGE_LIST");atendeSettings=data.settings;
+ const list=$("atendeAdminUsers");list.replaceChildren();
+ for(const user of data.users){const row=t("article",""),label=t("h3",user.name),wa=document.createElement("input"),email=document.createElement("input"),save=t("button","Salvar acesso");wa.type=email.type="checkbox";wa.checked=!!(user.grant?.ativo&&user.grant?.whatsapp);email.checked=!!(user.grant?.ativo&&user.grant?.email);const l1=t("label"," WhatsApp"),l2=t("label"," E-mail");l1.prepend(wa);l2.prepend(email);save.type="button";save.onclick=()=>exclusive(async()=>{if(!confirm("Alterar permissões de "+user.name+"?"))return;await callInbox("ATENDE_GRANT",{userId:user.id,revision:user.grant?.revision||0,whatsapp:wa.checked,email:email.checked});await showAttendanceAdmin();$("atendeAdminStatus").textContent="Acesso atualizado.";},$("atendeAdminStatus"));row.append(label,l1,l2,save);list.append(row);}
+ $("atendeReception").checked=!!data.settings.reception;$("atendeAI").checked=!!data.settings.ai;$("atendeAI").disabled=!data.aiConfigured;$("atendeAIStatus").textContent=data.aiConfigured?"Credencial IA configurada; disponibilidade depende do provedor.":"IA ainda sem credencial no servidor.";
+ $("atendeAdminPanel").hidden=false;
+}
+$("atendeAdmin").onclick=()=>exclusive(showAttendanceAdmin,$("status"));
+$("atendeAdminClose").onclick=()=>{$("atendeAdminPanel").hidden=true;};
+$("atendeSaveSettings").onclick=()=>exclusive(async()=>{if(!atendeSettings||!confirm("Ativar ou alterar as automações de atendimento?"))return;await callInbox("ATENDE_SETTINGS",{revision:atendeSettings.revision,reception:$("atendeReception").checked,ai:$("atendeAI").checked});await showAttendanceAdmin();$("atendeAdminStatus").textContent="Configuração registrada.";},$("atendeAdminStatus"));
 async function load() {
   const { data: { session } } = await db.auth.getSession();
   $("login").style.display = session ? "none" : "block";
@@ -624,8 +637,14 @@ async function load() {
   $("sair").hidden = !session;
   $("integracoesLink").hidden = !session;
   if (!session) void window.FORTE_ATENDE_NOTIFICACOES?.atualizarNaoLidas(0);
+  atendeAccess=null;$("atendeAdmin").hidden=true;$("atendeAdminPanel").hidden=true;
   if (session) await exclusive(async () => {
-    await showList(true, null, loadExclusions().catch(() => {}));
+    atendeAccess=await callInbox("ATENDE_ACCESS");
+    if(!atendeAccess.whatsapp&&!atendeAccess.email){$("status").textContent="Login válido, mas acesso ao FORTE ATENDE ainda não autorizado pelo MASTER.";return;}
+    $("atendeAdmin").hidden=!atendeAccess.master;$("integracoesLink").hidden=!atendeAccess.master;
+    $("tabWhatsApp").hidden=!atendeAccess.whatsapp;$("tabEmail").hidden=!atendeAccess.email;$("tabClientes").hidden=!atendeAccess.master;$("tabExclusoes").hidden=!atendeAccess.master;
+    if(atendeAccess.whatsapp)await showList(true,null,loadExclusions().catch(()=>{}));
+    else {$("tabEmail").click();}
   }, $("status"));
 }
 
@@ -1117,6 +1136,7 @@ $("voltar").onclick = () => {
 $("sair").onclick = () => exclusive(async () => {
   const { error } = await db.auth.signOut();
   if (error) throw Error("Não foi possível sair. Tente novamente.");
+  atendeAccess=null;$("atendeAdmin").hidden=true;$("atendeAdminPanel").hidden=true;
   badgeEpoch += 1;
   void window.FORTE_ATENDE_NOTIFICACOES?.atualizarNaoLidas(0);
   pending = selected = null;
@@ -1151,7 +1171,7 @@ $("sair").onclick = () => exclusive(async () => {
   $("inbox").style.display = "none";
 }, selected ? $("statusConversa") : $("status"));
 async function refreshUnreadBadge(force = false) {
-  if (document.hidden || badgeRefreshing || (!force && busy) || $("inbox").style.display !== "block") return;
+  if (!atendeAccess?.whatsapp || document.hidden || badgeRefreshing || (!force && busy) || $("inbox").style.display !== "block") return;
   if (!force && !selected && !$("whatsapp").hidden) return;
   const epoch = badgeEpoch;badgeRefreshing=true;
   try {const page = await callInbox("INBOX_LIST", {offset:0});if(epoch===badgeEpoch && $("inbox").style.display==="block") applyInboxUnread(page);}
@@ -1160,7 +1180,7 @@ async function refreshUnreadBadge(force = false) {
 document.addEventListener("visibilitychange",()=>refreshUnreadBadge());
 setInterval(refreshUnreadBadge, 30000);
 async function refreshWhatsApp() {
-  if (document.hidden || busy || refreshing || $("inbox").style.display !== "block" || $("whatsapp").hidden) return;
+  if (!atendeAccess?.whatsapp || document.hidden || busy || refreshing || $("inbox").style.display !== "block" || $("whatsapp").hidden) return;
   const version = viewVersion;
   refreshing = true;
   try {
