@@ -130,21 +130,17 @@ Deno.serve(async req => {
 
     const [grant, account] = await Promise.all([
       client.rpc("access_current_module", { p_app: "vendas" }),
-      client.from("fc_perfis").select("empresa_id,nome,ativo,trocar_senha,status_aprovacao,permissoes").eq("user_id", user.id).maybeSingle()
+      client.from("fc_perfis").select("empresa_id,nome,perfil,ativo,trocar_senha,status_aprovacao,permissoes").eq("user_id", user.id).maybeSingle()
     ]);
-    const profile = account.data;
-    const role = grant.data?.role;
-    const adminRole = ["MASTER", "ADMINISTRADOR"].includes(role);
-    const permission = profile?.permissoes;
-    if (grant.error || !grant.data?.allowed || account.error || !profile?.ativo ||
-        profile.trocar_senha || profile.status_aprovacao !== "APROVADO" ||
-        (!adminRole && (!["OPERADOR_GERAL", "VENDEDOR_INTERNO"].includes(role) ||
-          (permission?.vendas !== true && permission?.["carga-direta"] !== true &&
-           permission?.["VENDAS E COMPRAS"]?.editar !== true)))) {
-      return json({ error: "Seu perfil não tem acesso à caixa de e-mails." }, 403);
-    }
-
-    const db = createClient(url, env("SUPABASE_SERVICE_ROLE_KEY"), { auth });
+    const profile=account.data;
+    if(account.error||!profile?.ativo||profile.trocar_senha||profile.status_aprovacao!=="APROVADO"||!profile.empresa_id)return json({error:"Perfil não autorizado."},403);
+    const db=createClient(url,env("SUPABASE_SERVICE_ROLE_KEY"),{auth});
+    const adminRole=!grant.error&&grant.data?.allowed===true&&grant.data.role==="MASTER"&&profile.perfil==="MASTER";
+    const allowed=await db.from("forte_atende_access").select("ativo,whatsapp,email").eq("empresa_id",profile.empresa_id).eq("user_id",user.id).order("revision",{ascending:false}).limit(1).maybeSingle();
+    if(allowed.error)return json({error:"Permissão indisponível."},503);
+    const canEmail=adminRole||allowed.data?.ativo===true&&allowed.data.email===true;
+    const canWhatsApp=adminRole||allowed.data?.ativo===true&&allowed.data.whatsapp===true;
+    if(!canEmail&&!canWhatsApp)return json({error:"Acesso ao FORTE ATENDE não autorizado."},403);
     const tenant = await db.from("gmail_hub_config").select("empresa_id").eq("id", true).maybeSingle();
     if (tenant.error || !profile.empresa_id || profile.empresa_id !== tenant.data?.empresa_id) {
       return json({ error: "Caixa indisponível para esta empresa." }, 403);
@@ -158,6 +154,9 @@ Deno.serve(async req => {
       return json({ error: "Ação inválida." }, 400);
     }
 
+    if(!adminRole&&["EXCLUDE","RESTORE","CONTACT_MODERATE"].includes(body.action))return json({error:"Ação exclusiva do MASTER."},403);
+    if((["CONTACT_MODERATION_LIST","CLIENT_WHATSAPP"].includes(body.action)||body.action==="CLIENT_SEND"&&body.channel==="whatsapp")&&!canWhatsApp)return json({error:"WhatsApp não autorizado."},403);
+    if((["LIST","OPEN","REPLY","CLIENT_EMAILS"].includes(body.action)||body.action==="CLIENT_SEND"&&body.channel==="email")&&!canEmail)return json({error:"E-mail não autorizado."},403);
     if (body.action === "CONTACT_MODERATION_LIST") {
       const { data, error } = await db.from("forte_atende_contatos_moderacao")
         .select("telefone_e164,status,motivo,alterado_em")
@@ -255,7 +254,7 @@ Deno.serve(async req => {
         if (data.length < 250) break;
         lastId = data.at(-1).id;
       }
-      return json({ actor, items });
+      return json({actor,items:items.filter(item=>item.canal==='email'?canEmail:canWhatsApp)});
     }
 
     if (body.action === "RESTORE") {
